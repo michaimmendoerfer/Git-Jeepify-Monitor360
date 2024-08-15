@@ -15,8 +15,8 @@ class CompButton {
         int _y;
 	int _Width;
 	int _Height;
-	
-	bool _ButtonState;
+
+	float *_ValueToFollow;
 
 	PeriphClass *_Periph;
 
@@ -27,19 +27,25 @@ class CompButton {
 	lv_obj_t *_LblPos;
 	lv_obj_t *_LblAmp;
 
+	lv_obj_t *_FollowTimer;
+
     public:
-        CompButton(PeriphClass *P, int x, int y, int size);
+        CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph);
+	CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, float *ValueToFollow);
 	~CompButton();
         
-        void SpinnerOn() 	{ lv_obj_add_flag  (_Spinner, LV_OBJ_FLAG_HIDDEN); }
-        void SpinnerOff()	{ lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN); }
+        void SpinnerOn() 		{ lv_obj_add_flag  (_Spinner, LV_OBJ_FLAG_HIDDEN); }
+        void SpinnerOff()		{ lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN); }
         
-	bool SpinnerIsVisible() { return !lv_obj_has_flag_any(_Spinner, LV_OBJ_FLAG_HIDDEN); }
+	bool SpinnerIsVisible() 	{ return !lv_obj_has_flag_any(_Spinner, LV_OBJ_FLAG_HIDDEN); }
 
-	bool GetButtonState();
-	void SetButtonState();
+	bool GetButtonState()   	{ if (lv_obj_has_state(_Button, LV_STATE_CHECKED)) return true; else return false; }
+	void SetButtonState(bool State) { if (State) lv_imagebutton_set_state(_Button, LV_IMAGEBUTTON_STATE_CHECKED); else lv_imagebutton_set_state(_Button, LV_IMAGEBUTTON_STATE_RELEASED);
+					 
         void Hide();
         void Show();
+
+	void Follow(float *Value);
 
 };
 
@@ -233,6 +239,12 @@ CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphCla
 
     lv_obj_add_event_cb(cui_ButtonSwitchSmall, get_component_child_event_cb, (lv_event_code_t)LV_EVENT_GET_COMP_CHILD, children);
     lv_obj_add_event_cb(cui_ButtonSwitchSmall, del_component_child_event_cb, LV_EVENT_DELETE, children);
+}
+CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, float *ValueToFollow);
+{
+    _ValueToFollow = ValueToFollow;
+    _FollowTimer = newTimer...
+	    
 }
 
 CompButton::~CompButton()

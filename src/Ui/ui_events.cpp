@@ -480,22 +480,23 @@ void Ui_Multi_Loaded(lv_event_t * e)
 	{
 		int x; int y;
 		switch (Pos) {
-			case 0: x=-80; y=-50; break;
-			case 1: x= 80; y=-50; break;
-			case 2: x=-80; y= 90; break;
-			case 3: x= 80; y= 90; break;
+			case 0: x=-80; y=-60; break;
+			case 1: x= 80; y=-60; break;
+			case 2: x=-80; y= 55; break;
+			case 3: x= 80; y= 55; break;
 		}
 
-		PeriphClass *P =  Screen[ActiveMultiScreen].GetPeriph(Pos);
-		if (P)
+		PeriphClass *Periph =  Screen[ActiveMultiScreen].GetPeriph(Pos);
+		if (Periph)
 		{
 			lv_obj_add_flag(lv_obj_get_child(lv_scr_act(), Pos+1), LV_OBJ_FLAG_HIDDEN);
-			if (P->IsSensor())
+			if (Periph->IsSensor())
 			{	
 				lv_obj_t *ui_ButtonSensorSmall = ui_ButtonSensorSmall_create(ui_ScrMulti);
 				lv_obj_set_x(ui_ButtonSensorSmall, x);
 				lv_obj_set_y(ui_ButtonSensorSmall, y);
 
+				if (MultiComponent[Pos]) lv_obj_del(MultiComponent[Pos]);
 				MultiComponent[Pos] = ui_ButtonSensorSmall;
 				
 				lv_obj_t *SensButton           = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_BUTTONSENSORSMALL);
@@ -503,44 +504,29 @@ void Ui_Multi_Loaded(lv_event_t * e)
 				lv_obj_t *SensButtonPeriphName = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_LBLSENSSMALLPERIPH);
 				lv_obj_t *SensButtonPos        = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_LBLSENSPOS);
 				
-				lv_label_set_text_fmt(SensButtonPeerName,   "%.6s", FindPeerById(P->GetPeerId())->GetName());
-				lv_label_set_text_fmt(SensButtonPeriphName, "%.6s", P->GetName());
+				lv_label_set_text_fmt(SensButtonPeerName,   "%.6s", PeerOf(Periph)->GetName());
+				lv_label_set_text_fmt(SensButtonPeriphName, "%.6s", Periph->GetName());
 				lv_label_set_text_fmt(SensButtonPos, "%d", Pos);
 
 				lv_obj_add_event_cb(ui_ButtonSensorSmall, Ui_Multi_Sensor_Clicked, LV_EVENT_ALL, NULL);  
 			}
-			else if (P->IsSwitch())
+			else if (Periph->IsSwitch())
 			{
-				lv_obj_t *ui_ButtonSwitchSmall = ui_ButtonSwitchSmall_create(ui_ScrMulti, x, y, 1, Pos, FindPeerById(P->GetPeerId())->GetName(), P->GetName());
-				Serial.println("switch erstellt");
-				MultiComponent[Pos] = ui_ButtonSwitchSmall;
-				
-				lv_obj_t *Spinner                = ui_comp_get_child(ui_ButtonSwitchSmall, UI_COMP_BUTTONSWITCHSMALL_SPINNER);
-				lv_obj_t *SwitchButton           = ui_comp_get_child(ui_ButtonSwitchSmall, UI_COMP_BUTTONSWITCHSMALL_BUTTONSWITCHSMALL);
-				lv_obj_t *SwitchButtonPeerName   = ui_comp_get_child(ui_ButtonSwitchSmall, UI_COMP_BUTTONSWITCHSMALL_LBLPEER);
-				lv_obj_t *SwitchButtonPeriphName = ui_comp_get_child(ui_ButtonSwitchSmall, UI_COMP_BUTTONSWITCHSMALL_LBLPERIPH);
-				lv_obj_t *SwitchButtonPos        = ui_comp_get_child(ui_ButtonSwitchSmall, UI_COMP_BUTTONSWITCHSMALL_LBLPOSITION);
-
-				if (P->GetValue() == 1) 
-					lv_imgbtn_set_state(SwitchButton, LV_IMGBTN_STATE_CHECKED_RELEASED);
-
-				lv_obj_add_event_cb(ui_ButtonSwitchSmall, Ui_Multi_Button_Clicked, LV_EVENT_ALL, NULL);  
-
-				if (P->GetChanged() == true)
+				if (CompButtonArray[Pos]) 
 				{
-					lv_obj_clear_flag(Spinner, LV_OBJ_FLAG_HIDDEN);
-					//lv_obj_move_foreground(MultiComponent[Pos]);	
+					delete CompButtonArray[Pos];
+					CompButtonArray[Pos] = NULL;
 				}
-				else
-				{
-						lv_obj_add_flag(Spinner, LV_OBJ_FLAG_HIDDEN);
-				}
+
+				CompButtonArray[Pos] = new CompButton;
+				CompButtonArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Button_Clicked);
 			}
 		}
 		else
 		{
 			lv_obj_clear_flag(lv_obj_get_child(lv_scr_act(), Pos+1), LV_OBJ_FLAG_HIDDEN);
 			MultiComponent[Pos] = NULL;
+			CompButtonArray[Pos] = NULL;
 		}
 	}
 	if (MultiTimer) 
@@ -617,59 +603,54 @@ void MultiUpdateTimer(lv_timer_t * timer)
 
 					break;
 				case SENS_TYPE_SWITCH:
-					lv_obj_t *Button = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSWITCHSMALL_BUTTONSWITCHSMALL);
-						
-					if (value == 1) 
+					if (CompButtonArray[Pos]->GetPeriph()->GetValue() == 1.0)
 					{
-						Serial.printf("Button %d ist 1\n\r", Pos);
-						lv_imgbtn_set_state(Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
+						CompButtonArray[Pos]->SetButtonState(true);
+
+						//ggf show Sens-brother
+
+						lv_obj_t *BrotherValueLbl;
+						if (CompButtonArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
+						{
+							PeriphClass *Brother = FindPeriphById(CompButtonArray[Pos]->GetPeriph()->GetBrotherId());
+							if (Brother)
+							{
+								char buf[10];
+								int nk = 0;
+								float value = Brother->GetValue();
+								
+								if      (value<10)  nk = 2;
+								else if (value<100) nk = 1;
+								else                nk = 0;
+
+								if (value == -99) strcpy(buf, "--"); 
+								else dtostrf(value, 0, nk, buf);
+
+								strcat(buf, " A");
+
+								CompButtonArray[Pos]->SetAmp(buf);
+								CompButtonArray[Pos]->ShowAmp();
+							}
+							else
+							{
+								CompButtonArray[Pos]->HideAmp();
+							}
+						}
 					}
 					else
 					{
-						Serial.printf("Button %d ist 0\n\r", Pos);
-						lv_imgbtn_set_state(Button, LV_IMGBTN_STATE_RELEASED);
-					}
-
-					if (Screen[ActiveMultiScreen].GetPeriph(Pos)->GetChanged() == true)
-					{
-						lv_obj_clear_flag(SwitchArraySpinners[Pos], LV_OBJ_FLAG_HIDDEN);
-						//lv_obj_move_foreground(MultiComponent[Pos]);	
-					}
-					else
-					{
-						lv_obj_add_flag(SwitchArraySpinners[Pos], LV_OBJ_FLAG_HIDDEN);
+						CompButtonArray[Pos]->SetButtonState(false);
+						//Serial.println("Schalter ist aus");
 						
 					}
 					
-					lv_obj_t *BrotherValueLbl;
-					int BrotherId = Screen[ActiveMultiScreen].GetPeriph(Pos)->GetBrotherId();
-					if (BrotherId != -1)   
+					if (CompButtonArray[Pos]->GetPeriph()->GetChanged() == false)
 					{
-						PeriphClass *Brother = FindPeriphById(BrotherId);
-						if (Brother)
-						{
-							char buf[10];
-							int nk = 0;
-							float value = Brother->GetValue();
-							
-							if      (value<10)  nk = 2;
-							else if (value<100) nk = 1;
-							else                nk = 0;
-
-							if (value == -99) strcpy(buf, "--"); 
-							else dtostrf(value, 0, nk, buf);
-
-							strcat(buf, " A");
-
-							BrotherValueLbl = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSWITCHSMALL_LBLVALUE);
-					
-							lv_label_set_text(BrotherValueLbl, buf);
-							lv_obj_clear_flag(BrotherValueLbl, LV_OBJ_FLAG_HIDDEN);
-						}
-						else
-						{
-							lv_obj_add_flag(BrotherValueLbl, LV_OBJ_FLAG_HIDDEN);
-						}
+						CompButtonArray[Pos]->SpinnerOff();
+					}
+					else
+					{
+						CompButtonArray[Pos]->SpinnerOn();
 					}
 					break;
 			}
@@ -680,31 +661,39 @@ void Ui_Multi_Button_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    
-	if(event_code == LV_EVENT_CLICKED) {
-        lv_obj_t *Button = ui_comp_get_child(target, UI_COMP_BUTTONSWITCHSMALL_LBLPOSITION);
-	
-		int Pos = atoi(lv_label_get_text(Button));
-	
-		Screen[ActiveMultiScreen].GetPeriph(Pos)->SetChanged(true);
 
-		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_PRESSED)
+    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Next(e);
+    }
+    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Prev(e);
+	}
+	else if (event_code == LV_EVENT_CLICKED) {
+		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
+
+		Periph->SetChanged(true);
+		Serial.printf("Button %s-State in event is %d\n\r", Periph->GetName(), lv_obj_get_state(target));
+
+		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) //komisch dass nicht Released
 		{
-			Screen[ActiveMultiScreen].GetPeriph(Pos)->SetValue(0);
+			Periph->SetValue(0.0);
+			Serial.printf("Button %s-State is DISABLED - Schalte aus\\r", Periph->GetName());
 		}
-		else
+		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED)
 		{
-			Screen[ActiveMultiScreen].GetPeriph(Pos)->SetValue(1);
+			Periph->SetValue(1.0);
+			Serial.printf("Button %s-State is CHECKED_RELEASED - Schalte ein\n\r", Periph->GetName());
 		}
-
-		ToggleSwitch(Screen[ActiveMultiScreen].GetPeer(Pos), Screen[ActiveMultiScreen].GetPeriph(Pos)->GetPos());
-		Serial.printf("Toggleswitch Pos:%d, PeerName:%s\n\r", Screen[ActiveMultiScreen].GetPeriph(Pos)->GetPos(), Screen[ActiveMultiScreen].GetPeer(Pos)->GetName());
-	}	
-	if(event_code == LV_EVENT_LONG_PRESSED) {
-        lv_obj_t *Button = ui_comp_get_child(target, UI_COMP_BUTTONSWITCHSMALL_LBLPOSITION);
+		Serial.printf("Schalter vor Toggle: Value = %f, Changed = %d\n\r", Periph->GetValue(), Periph->GetChanged());
 	
-		MultiPosToChange = atoi(lv_label_get_text(Button));
-
+		ToggleSwitch(Periph);
+		//Serial.printf("Toggleswitch Pos:%d, PeerName:%s\n\r", SwitchArray[Pos]->GetPos(), FindPeerById(SwitchArray[Pos]->GetPeerId())->GetName());
+    }	
+	else if (event_code == LV_EVENT_LONG_PRESSED) {
+        MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
+		Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
     }
 }
@@ -735,6 +724,7 @@ void Ui_Multi_Set_Panel1(lv_event_t * e)
 	if (PeriphList.size() > 0) 
 	{
 		MultiPosToChange = 0;
+		Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
 	}
 }
@@ -743,6 +733,7 @@ void Ui_Multi_Set_Panel2(lv_event_t * e)
 	if (PeriphList.size() > 0) 
 	{
 		MultiPosToChange = 1;
+		Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
 	}
 }
@@ -751,6 +742,7 @@ void Ui_Multi_Set_Panel3(lv_event_t * e)
 	if (PeriphList.size() > 0) 
 	{
 		MultiPosToChange = 2;
+		Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
 	}
 }
@@ -759,6 +751,7 @@ void Ui_Multi_Set_Panel4(lv_event_t * e)
 	if (PeriphList.size() > 0) 
 	{
 		MultiPosToChange = 3;
+		Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
 	}
 }
@@ -770,6 +763,12 @@ void Ui_Multi_Unload(lv_event_t * e)
 	
 	for (int Pos = 0; Pos<PERIPH_PER_SCREEN; Pos++)
 	{
+		if (CompButtonArray[Pos]) 
+		{
+			delete(CompButtonArray[Pos]);
+			CompButtonArray[Pos] = NULL;
+		}
+			
 		if (MultiComponent[Pos])
 		{
 			lv_obj_del(MultiComponent[Pos]);
@@ -968,9 +967,9 @@ void Ui_Switch_Loaded(lv_event_t * e)
 
 		CompButtonArray[0] = new CompButton();
 		Serial.println("Button new");
-		CompButtonArray[0]->Setup(ui_ScrSwitch, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
+		CompButtonArray[0]->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
 		Serial.println("vor eventcb");
-		lv_obj_add_event_cb(CompButtonArray[0]->GetButton(), Ui_Switch_Clicked, LV_EVENT_ALL, NULL);
+		
 		lv_label_set_text_fmt(ui_LblSwitchPeer,   "%.6s", PeerOf(ActivePeriphSwitch)->GetName());
 		lv_label_set_text_fmt(ui_LblSwitchPeriph, "%.6s", ActivePeriphSwitch->GetName());
 	}
@@ -997,7 +996,11 @@ void Ui_Switch_Leave(lv_event_t * e)
 		SwitchTimer = NULL;
 	}
 	
-	if (CompButtonArray[0]) delete(CompButtonArray[0]);
+	if (CompButtonArray[0]) 
+	{
+		delete(CompButtonArray[0]);
+		CompButtonArray[0] = NULL;
+	}
 }
 #pragma endregion Screen_Switch
 #pragma region Screen_PeriphChoice

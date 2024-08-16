@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "ui.h"
+#include "Ui/ui.h"
 #include "PeerClass.h"
 #include "pref_manager.h"
 #include "LinkedList.h"
@@ -7,54 +7,18 @@
 #include "main.h"
 #include "CompButton.h"
 
-class CompButton {
-    static int  _ClassId;
-
-    private:
-        int _x;
-        int _y;
-	int _Width;
-	int _Height;
-
-	float *_ValueToFollow;
-
-	PeriphClass *_Periph;
-
-	lv_obj_t *_Spinner;
-	lv_obj_t *_Button;
-	lv_obj_t *_LblPeer;
-	lv_obj_t *_LblPeriph;
-	lv_obj_t *_LblPos;
-	lv_obj_t *_LblAmp;
-
-	lv_obj_t *_FollowTimer;
-
-    public:
-        CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph);
-	CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, float *ValueToFollow);
-	~CompButton();
-        
-        void SpinnerOn() 		{ lv_obj_add_flag  (_Spinner, LV_OBJ_FLAG_HIDDEN); }
-        void SpinnerOff()		{ lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN); }
-        
-	bool SpinnerIsVisible() 	{ return !lv_obj_has_flag_any(_Spinner, LV_OBJ_FLAG_HIDDEN); }
-
-	bool GetButtonState()   	{ if (lv_obj_has_state(_Button, LV_STATE_CHECKED)) return true; else return false; }
-	void SetButtonState(bool State) { if (State) lv_imagebutton_set_state(_Button, LV_IMAGEBUTTON_STATE_CHECKED); else lv_imagebutton_set_state(_Button, LV_IMAGEBUTTON_STATE_RELEASED);
-					 
-        void Hide();
-        void Show();
-
-	void Follow(float *Value);
-
-};
-
-CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph)
+CompButton::CompButton()
 {
-    _SpinnerOn = false;
+
+}
+
+void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, lv_event_cb_t event_cb)
+{
     _Periph = Periph;
+    _event_cb = event_cb;
+   
     _x = x;
-    _y = y;
+    _y = y;			
 	
     if (size == 1)
     {
@@ -96,10 +60,10 @@ CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphCla
     }
     else
     {
-	lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1640860301, NULL);
-	lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_743505413, NULL);
-	lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, &ui_img_743505413, NULL);
-	lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &ui_img_888658411, NULL);
+	    lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1134846501, NULL);
+		lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_1528892059, NULL);
+		lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, &ui_img_1528892059, NULL);
+		lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &ui_img_715952573, NULL);
     }
 
     lv_obj_set_align(_Button, LV_ALIGN_CENTER);
@@ -190,7 +154,7 @@ CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphCla
     lv_obj_set_style_pad_left(_LblPeriph, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_right(_LblPeriph, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_pad_top(_LblPeriph, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(v, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(_LblPeriph, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     _LblAmp = lv_label_create(_Button);
     if (size == 1)
@@ -208,7 +172,7 @@ CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphCla
 		lv_obj_set_height(_LblAmp, LV_SIZE_CONTENT);    /// 2
 		lv_obj_set_x(_LblAmp, 0);
     	lv_obj_set_y(_LblAmp, 115);
-    	lv_obj_set_align(v, LV_ALIGN_CENTER);
+    	lv_obj_set_align(_LblAmp, LV_ALIGN_CENTER);
 		lv_obj_set_style_text_font(_LblAmp, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
     lv_label_set_text(_LblAmp, "28.8 A");
@@ -227,29 +191,30 @@ CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphCla
     lv_obj_set_style_pad_bottom(_LblAmp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 	lv_obj_add_flag(_LblAmp, LV_OBJ_FLAG_HIDDEN);
 
-    _LblPos = lv_label_create(_Button);
-    lv_obj_set_width(_LblPos, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(_LblPos, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(_LblPos, 20);
-    lv_obj_set_y(_LblPos, 0);
-    lv_obj_set_align(_LblPos, LV_ALIGN_CENTER);
-	lv_label_set_text_fmt(_LblPos, "%d", Pos);
-    lv_obj_set_style_text_color(_LblPos, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(_LblPos, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    _LblPeriphId = lv_label_create(_Button);
+    lv_obj_set_width(_LblPeriphId, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeriphId, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeriphId, 80);
+    lv_obj_set_y(_LblPeriphId, 0);
+    lv_obj_set_align(_LblPeriphId, LV_ALIGN_CENTER);
+	lv_label_set_text_fmt(_LblPeriphId, "%d", _Periph->GetId());
+    lv_obj_set_style_text_color(_LblPeriphId, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    //lv_obj_set_style_text_opa(_LblPeriphId, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(cui_ButtonSwitchSmall, get_component_child_event_cb, (lv_event_code_t)LV_EVENT_GET_COMP_CHILD, children);
-    lv_obj_add_event_cb(cui_ButtonSwitchSmall, del_component_child_event_cb, LV_EVENT_DELETE, children);
+    //lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
+	
 }
-CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, float *ValueToFollow);
+/*CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, lv_event_cb_t event_cb, float *ValueToFollow);
 {
     _ValueToFollow = ValueToFollow;
-    _FollowTimer = newTimer...
-	    
+    //_FollowTimer = newTimer...
+	CompButton(comp_parent, x, y, size, Periph, event_cb);
 }
-
+*/
 CompButton::~CompButton()
 {
-    if (_Spinner) l_obj_del(_Spinner);
-    if (_Button)  l_obj_del(_Button);
+    if (_Spinner) lv_obj_del(_Spinner);
+    if (_Button)  lv_obj_del(_Button);
+    lv_obj_remove_event_cb(_Button, _event_cb);
 }
 

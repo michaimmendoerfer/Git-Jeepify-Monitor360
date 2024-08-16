@@ -324,6 +324,8 @@ bool ToggleSwitch(PeriphClass *Periph)
     doc["Order"] = SEND_CMD_SWITCH_TOGGLE;
     doc["Value"] = Periph->GetName();
     doc["Pos"]   = Periph->GetPos();
+
+    Serial.printf("Toggle Value = %f\n\r", Periph->GetValue());
     
     serializeJson(doc, jsondata);  
     

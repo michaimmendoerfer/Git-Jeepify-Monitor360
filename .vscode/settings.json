@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "images.h": "c"
+        "images.h": "c",
+        "new": "cpp"
     }
 }

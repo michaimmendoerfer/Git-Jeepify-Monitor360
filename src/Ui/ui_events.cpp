@@ -37,29 +37,15 @@ lv_timer_t *MultiTimer;
 lv_timer_t *SwitchTimer;
 lv_timer_t *SettingsTimer;
 
-bool SpinnerSwitchVisible = false;
-
 #define MAX_SWITCHES 1
+
 PeriphClass *SwitchArray[4] = {NULL, NULL, NULL, NULL};
-CompButton  *CompButtonArray[4] = {NULL, NULL, NULL, NULL};
+CompThing   *CompThingArray[4] = {NULL, NULL, NULL, NULL};
 lv_obj_t    *SwitchArraySwitches[4] = {NULL, NULL, NULL, NULL};
-lv_obj_t    *SwitchArraySpinners[4] = {NULL, NULL, NULL, NULL};
 int          SwitchPositionX[4][4] = { {  0 ,   0,   0,   0},
 									   { -50,  80,   0,   0},
 									   {-100,  15, 130,   0},
 									   {-120, -30,  60, 150} };
-
-lv_obj_t * ui_ButtonSwitchSmall_create(lv_obj_t * comp_parent, int x, int y, int size, int Pos, char* PeerName, char *PeriphName);
-lv_obj_t * ui_ButtonSwitchSpinner_create(lv_obj_t * comp_parent, lv_obj_t *Switch);
-
-// COMPONENT ButtonSwitchSmall
-#define UI_COMP_BUTTONSWITCHSMALL_SPINNER 0
-#define UI_COMP_BUTTONSWITCHSMALL_BUTTONSWITCHSMALL 1
-#define UI_COMP_BUTTONSWITCHSMALL_LBLPEER 2
-#define UI_COMP_BUTTONSWITCHSMALL_LBLPERIPH 3
-#define UI_COMP_BUTTONSWITCHSMALL_LBLVALUE 4
-#define UI_COMP_BUTTONSWITCHSMALL_LBLPOSITION 5
-#define _UI_COMP_BUTTONSWITCHSMALL_NUM 6
 
 int FirstShownSwitch;
  
@@ -490,43 +476,28 @@ void Ui_Multi_Loaded(lv_event_t * e)
 		if (Periph)
 		{
 			lv_obj_add_flag(lv_obj_get_child(lv_scr_act(), Pos+1), LV_OBJ_FLAG_HIDDEN);
+			
+			if (CompThingArray[Pos]) 
+				{
+					delete CompThingArray[Pos];
+					CompThingArray[Pos] = NULL;
+				}
+
 			if (Periph->IsSensor())
 			{	
-				lv_obj_t *ui_ButtonSensorSmall = ui_ButtonSensorSmall_create(ui_ScrMulti);
-				lv_obj_set_x(ui_ButtonSensorSmall, x);
-				lv_obj_set_y(ui_ButtonSensorSmall, y);
-
-				if (MultiComponent[Pos]) lv_obj_del(MultiComponent[Pos]);
-				MultiComponent[Pos] = ui_ButtonSensorSmall;
-				
-				lv_obj_t *SensButton           = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_BUTTONSENSORSMALL);
-				lv_obj_t *SensButtonPeerName   = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_LBLSENSSMALLPEER);
-				lv_obj_t *SensButtonPeriphName = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_LBLSENSSMALLPERIPH);
-				lv_obj_t *SensButtonPos        = ui_comp_get_child(ui_ButtonSensorSmall, UI_COMP_BUTTONSENSORSMALL_LBLSENSPOS);
-				
-				lv_label_set_text_fmt(SensButtonPeerName,   "%.6s", PeerOf(Periph)->GetName());
-				lv_label_set_text_fmt(SensButtonPeriphName, "%.6s", Periph->GetName());
-				lv_label_set_text_fmt(SensButtonPos, "%d", Pos);
-
-				lv_obj_add_event_cb(ui_ButtonSensorSmall, Ui_Multi_Sensor_Clicked, LV_EVENT_ALL, NULL);  
+				CompThingArray[Pos] = new CompSensor;
+				((CompSensor *) CompThingArray[Pos])->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Sensor_Clicked);
 			}
 			else if (Periph->IsSwitch())
 			{
-				if (CompButtonArray[Pos]) 
-				{
-					delete CompButtonArray[Pos];
-					CompButtonArray[Pos] = NULL;
-				}
-
-				CompButtonArray[Pos] = new CompButton;
-				CompButtonArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Button_Clicked);
+				CompThingArray[Pos] = new CompButton;
+				((CompButton *) CompThingArray[Pos])->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Button_Clicked);
 			}
 		}
 		else
 		{
 			lv_obj_clear_flag(lv_obj_get_child(lv_scr_act(), Pos+1), LV_OBJ_FLAG_HIDDEN);
-			MultiComponent[Pos] = NULL;
-			CompButtonArray[Pos] = NULL;
+			CompThingArray[Pos] = NULL;
 		}
 	}
 	if (MultiTimer) 
@@ -542,9 +513,8 @@ void Ui_Multi_Loaded(lv_event_t * e)
 }
 void MultiUpdateTimer(lv_timer_t * timer)
 {
-	_lv_obj_t *ComponentValue;
-	_lv_obj_t *ComponentARC;
-	
+	lv_obj_t *CompBase;
+
 	static char ValueBuf[10];
 	static int nk = 0;
 	static float value;
@@ -558,6 +528,7 @@ void MultiUpdateTimer(lv_timer_t * timer)
 
 		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0)
 		{
+			CompBase = CompThingArray[Pos]->GetButton();
 			value = Screen[ActiveMultiScreen].GetPeriph(Pos)->GetValue();
 			if      (value<10)  nk = 2;
 			else if (value<100) nk = 1;
@@ -569,50 +540,44 @@ void MultiUpdateTimer(lv_timer_t * timer)
 			switch (Screen[ActiveMultiScreen].GetPeriph(Pos)->GetType()) 
 			{
 				case SENS_TYPE_AMP:
-					ComponentValue = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSENSORSMALL_LBLSENSSMALLVALUE);
-			
 					strcat(ValueBuf, " A");
 					
 					if 		(value < 20) bg = lv_color_hex(0x135A25);
 					else if (value < 25) bg = lv_color_hex(0x7C7E26);
 					else 				 bg = lv_color_hex(0x88182C);
 
-					lv_obj_set_style_bg_color(MultiComponent[Pos], bg, LV_PART_MAIN | LV_STATE_DEFAULT);
-					lv_label_set_text(ComponentValue, ValueBuf);
+					lv_obj_set_style_bg_color(CompBase, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+					CompThingArray[Pos]->SetValue(ValueBuf);
 
-					ComponentARC = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSENSORSMALL_ARC2);
-					lv_arc_set_range(ComponentARC, 0, 400);
-					lv_arc_set_value(ComponentARC, value*10);
+					lv_arc_set_range(((CompSensor *)CompThingArray[Pos])->GetArc(), 0, 400);
+					lv_arc_set_value(((CompSensor *)CompThingArray[Pos])->GetArc(), value*10);
 					
 					break;
 				case SENS_TYPE_VOLT:
-					ComponentValue = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSENSORSMALL_LBLSENSSMALLVALUE);
-					
 					strcat(ValueBuf, " V");
 					
 					if 		(value < 13)   bg = lv_color_hex(0x135A25);
 					else if (value < 14.4) bg = lv_color_hex(0x7C7E26);
 					else 				   bg = lv_color_hex(0x88182C);
 
-					lv_obj_set_style_bg_color(MultiComponent[Pos], bg, LV_PART_MAIN | LV_STATE_DEFAULT);
-					lv_label_set_text(ComponentValue, ValueBuf);
+					lv_obj_set_style_bg_color(CompBase, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+					CompThingArray[Pos]->SetValue(ValueBuf);
 
-					ComponentARC = ui_comp_get_child(MultiComponent[Pos], UI_COMP_BUTTONSENSORSMALL_ARC2);
-					lv_arc_set_range(ComponentARC, 90, 150);
-					lv_arc_set_value(ComponentARC, value*10);
+					lv_arc_set_range(((CompSensor *)CompThingArray[Pos])->GetArc(), 90, 150);
+					lv_arc_set_value(((CompSensor *)CompThingArray[Pos])->GetArc(), value*10);
 
 					break;
 				case SENS_TYPE_SWITCH:
-					if (CompButtonArray[Pos]->GetPeriph()->GetValue() == 1.0)
+					if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
 					{
-						CompButtonArray[Pos]->SetButtonState(true);
+						((CompButton *) CompThingArray[Pos])->SetButtonState(true);
 
 						//ggf show Sens-brother
 
 						lv_obj_t *BrotherValueLbl;
-						if (CompButtonArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
+						if (CompThingArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
 						{
-							PeriphClass *Brother = FindPeriphById(CompButtonArray[Pos]->GetPeriph()->GetBrotherId());
+							PeriphClass *Brother = FindPeriphById(CompThingArray[Pos]->GetPeriph()->GetBrotherId());
 							if (Brother)
 							{
 								char buf[10];
@@ -628,29 +593,29 @@ void MultiUpdateTimer(lv_timer_t * timer)
 
 								strcat(buf, " A");
 
-								CompButtonArray[Pos]->SetAmp(buf);
-								CompButtonArray[Pos]->ShowAmp();
+								((CompButton *) CompThingArray[Pos])->SetAmp(buf);
+								((CompButton *) CompThingArray[Pos])->ShowAmp();
 							}
 							else
 							{
-								CompButtonArray[Pos]->HideAmp();
+								((CompButton *) CompThingArray[Pos])->HideAmp();
 							}
 						}
 					}
 					else
 					{
-						CompButtonArray[Pos]->SetButtonState(false);
+						((CompButton *) CompThingArray[Pos])->SetButtonState(false);
 						//Serial.println("Schalter ist aus");
 						
 					}
 					
-					if (CompButtonArray[Pos]->GetPeriph()->GetChanged() == false)
+					if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
 					{
-						CompButtonArray[Pos]->SpinnerOff();
+						((CompButton *) CompThingArray[Pos])->SpinnerOff();
 					}
 					else
 					{
-						CompButtonArray[Pos]->SpinnerOn();
+						((CompButton *) CompThingArray[Pos])->SpinnerOn();
 					}
 					break;
 			}
@@ -701,21 +666,25 @@ void Ui_Multi_Sensor_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    
-	if(event_code == LV_EVENT_CLICKED) {
-        lv_obj_t *Sensor = ui_comp_get_child(target, UI_COMP_BUTTONSENSORSMALL_LBLSENSPOS);
-	
-		int Pos = atoi(lv_label_get_text(Sensor));
+
+    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Next(e);
+    }
+    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Prev(e);
+	}
+	else if (event_code == LV_EVENT_CLICKED) {
+		int Pos = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
 		ActivePeriph = Screen[ActiveMultiScreen].GetPeriph(Pos);
 		ActivePeer   = Screen[ActiveMultiScreen].GetPeer(Pos);
 		
 		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScrSingle_screen_init);
     }	
-	if(event_code == LV_EVENT_LONG_PRESSED) {
-        lv_obj_t *Button = ui_comp_get_child(target, UI_COMP_BUTTONSENSORSMALL_LBLSENSPOS);
-	
-		MultiPosToChange = atoi(lv_label_get_text(Button));
-
+	else if (event_code == LV_EVENT_LONG_PRESSED) {
+        int Pos = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
+		//Ui_Multi_Unload(e);
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
     }
 }
@@ -763,17 +732,23 @@ void Ui_Multi_Unload(lv_event_t * e)
 	
 	for (int Pos = 0; Pos<PERIPH_PER_SCREEN; Pos++)
 	{
-		if (CompButtonArray[Pos]) 
+		if (CompThingArray[Pos])
 		{
-			delete(CompButtonArray[Pos]);
-			CompButtonArray[Pos] = NULL;
-		}
-			
-		if (MultiComponent[Pos])
-		{
-			lv_obj_del(MultiComponent[Pos]);
-			MultiComponent[Pos] = NULL;
-			Serial.printf("Switch %d deleted.\n\r", Pos);
+			//Serial.printf("CompThing[%d] (%s) hat Class %d\n\r", Pos, CompThingArray[Pos]->GetPeriph()->GetName(), CompThingArray[Pos]->GetClassType());
+			if (CompThingArray[Pos]->GetClassType() == 1) // ButtonClass
+			{
+				//Serial.println("will Buttonclass löschen");
+				delete ((CompButton *) CompThingArray[Pos]);
+				CompThingArray[Pos] = NULL;
+				//Serial.println("Buttonclass gelöscht");
+
+			}
+			else if (CompThingArray[Pos]->GetClassType() == 2) // SensorClass
+			{
+				//Serial.println("will Sensorclass löschen");
+				delete ((CompSensor *) CompThingArray[Pos]);
+				CompThingArray[Pos] = NULL;
+			}
 		}
 	}
 }
@@ -820,19 +795,21 @@ void Ui_Multi_Prev(lv_event_t * e)
 #pragma region Screen_Switch
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
+	int Pos = 0;
+
 	Serial.println("Begin SwitchTimer");
-	Serial.printf("Schalter Value = %f, Changed = %d\n\r", CompButtonArray[0]->GetPeriph()->GetValue(), CompButtonArray[0]->GetPeriph()->GetChanged());
-	if (CompButtonArray[0]->GetPeriph()->GetValue() == 1.0)
+	Serial.printf("Schalter Value = %f, Changed = %d\n\r", CompThingArray[Pos]->GetPeriph()->GetValue(), CompThingArray[Pos]->GetPeriph()->GetChanged());
+	if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
 	{
 		Serial.println("Schalter ist an");
-		CompButtonArray[0]->SetButtonState(true);
+		((CompButton *) CompThingArray[Pos])->SetButtonState(true);
 
 		//ggf show Sens-brother
 
 		lv_obj_t *BrotherValueLbl;
-		if (CompButtonArray[0]->GetPeriph()->GetBrotherId() != -1)   
+		if (CompThingArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
 		{
-			PeriphClass *Brother = FindPeriphById(CompButtonArray[0]->GetPeriph()->GetBrotherId());
+			PeriphClass *Brother = FindPeriphById(CompThingArray[Pos]->GetPeriph()->GetBrotherId());
 			if (Brother)
 			{
 				char buf[10];
@@ -848,29 +825,29 @@ void SwitchUpdateTimer(lv_timer_t * timer)
 
 				strcat(buf, " A");
 
-				CompButtonArray[0]->SetAmp(buf);
-				CompButtonArray[0]->ShowAmp();
+				((CompButton *) CompThingArray[Pos])->SetAmp(buf);
+				((CompButton *) CompThingArray[Pos])->ShowAmp();
 			}
 			else
 			{
-				CompButtonArray[0]->HideAmp();
+				((CompButton *) CompThingArray[Pos])->HideAmp();
 			}
 		}
 	}
 	else
 	{
-		CompButtonArray[0]->SetButtonState(false);
+		((CompButton *) CompThingArray[Pos])->SetButtonState(false);
 		Serial.println("Schalter ist aus");
 		
 	}
 	
-	if (CompButtonArray[0]->GetPeriph()->GetChanged() == false)
+	if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
 	{
-		CompButtonArray[0]->SpinnerOff();
+		((CompButton *) CompThingArray[Pos])->SpinnerOff();
 	}
 	else
 	{
-		CompButtonArray[0]->SpinnerOn();
+		((CompButton *) CompThingArray[Pos])->SpinnerOn();
 	}
 }
 void Ui_Switch_Next(lv_event_t * e)
@@ -879,7 +856,7 @@ void Ui_Switch_Next(lv_event_t * e)
 
 	if (TestPeriph)
 	{
-		for (int Pos = 0; Pos<MAX_SWITCHES; Pos++)
+		/*for (int Pos = 0; Pos<MAX_SWITCHES; Pos++)
 		{
 			SwitchArray[Pos] = NULL;
 			if (SwitchArraySwitches[Pos])
@@ -891,8 +868,9 @@ void Ui_Switch_Next(lv_event_t * e)
 				lv_obj_del(SwitchArraySwitches[Pos]);
 				SwitchArraySwitches[Pos] = NULL;
 			}
-		}
+		}*/
 		ActivePeriphSwitch = TestPeriph;
+		Ui_Switch_Leave(e);
 		Ui_Switch_Loaded(e);
 	}
 }
@@ -937,7 +915,7 @@ void Ui_Switch_Prev(lv_event_t * e)
 	
 	if (TestPeriph)
 	{
-		for (int Pos = 0; Pos<MAX_SWITCHES; Pos++)
+		/*for (int Pos = 0; Pos<MAX_SWITCHES; Pos++)
 		{
 			SwitchArray[Pos] = NULL;
 			if (SwitchArraySwitches[Pos])
@@ -949,13 +927,15 @@ void Ui_Switch_Prev(lv_event_t * e)
 				lv_obj_del(SwitchArraySwitches[Pos]);
 				SwitchArraySwitches[Pos] = NULL;
 			}
-		}
+		}*/
 		ActivePeriphSwitch = TestPeriph;
+		Ui_Switch_Leave(e);
 		Ui_Switch_Loaded(e);
 	}
 }
 void Ui_Switch_Loaded(lv_event_t * e)
 {
+	int Pos = 0;
 	if (!ActivePeriphSwitch) 
 	{
 		Serial.println("No ActivePeriphSwitch");
@@ -963,15 +943,14 @@ void Ui_Switch_Loaded(lv_event_t * e)
 	}	
 	if (ActivePeriphSwitch)
 	{
-		if (CompButtonArray[0]) delete CompButtonArray[0];
+		if (CompThingArray[Pos]) delete CompThingArray[Pos];
 
-		CompButtonArray[0] = new CompButton();
+		CompThingArray[Pos] = new CompButton();
 		Serial.println("Button new");
-		CompButtonArray[0]->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
-		Serial.println("vor eventcb");
+		((CompButton *) CompThingArray[Pos])->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
 		
-		lv_label_set_text_fmt(ui_LblSwitchPeer,   "%.6s", PeerOf(ActivePeriphSwitch)->GetName());
-		lv_label_set_text_fmt(ui_LblSwitchPeriph, "%.6s", ActivePeriphSwitch->GetName());
+		//lv_label_set_text_fmt(ui_LblSwitchPeer,   "%.6s", PeerOf(ActivePeriphSwitch)->GetName());
+		//lv_label_set_text_fmt(ui_LblSwitchPeriph, "%.6s", ActivePeriphSwitch->GetName());
 	}
 	else
 	{
@@ -988,6 +967,7 @@ void Ui_Switch_Loaded(lv_event_t * e)
 }
 void Ui_Switch_Leave(lv_event_t * e)
 {
+	int Pos = 0;
 	Serial.println("Switch_leave:");
 
 	if (SwitchTimer) 
@@ -996,10 +976,10 @@ void Ui_Switch_Leave(lv_event_t * e)
 		SwitchTimer = NULL;
 	}
 	
-	if (CompButtonArray[0]) 
+	if (CompThingArray[Pos]) 
 	{
-		delete(CompButtonArray[0]);
-		CompButtonArray[0] = NULL;
+		delete (((CompButton *) CompThingArray[Pos]));
+		CompThingArray[Pos] = NULL;
 	}
 }
 #pragma endregion Screen_Switch
@@ -1193,237 +1173,3 @@ void Ui_Menu_Btn2_Clicked(lv_event_t * e)
 	if (ActivePeriphSwitch) _ui_screen_change(&ui_ScrSwitch, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSwitch_screen_init);
 }
 #pragma endregion Menu
-
-lv_obj_t * ui_ButtonSwitchSmall_create(lv_obj_t * comp_parent, int x, int y, int size, int Pos, char* PeerName, char *PeriphName)
-{	
-	int CompWidth;
-	int CompHeight;
-
-	if (size == 1)
-	{
-		CompWidth = 70;
-		CompHeight = 120;
-	}
-	else
-	{
-		CompWidth = 120;
-		CompHeight = 205;
-	}
-	
-	lv_obj_t *cui_ButtonSwitchSmallComp = lv_spinner_create(comp_parent, 1000, 90);
-
-    lv_obj_set_align(cui_ButtonSwitchSmallComp, LV_ALIGN_CENTER);
-    lv_obj_set_width(cui_ButtonSwitchSmallComp, CompWidth+30);
-    lv_obj_set_height(cui_ButtonSwitchSmallComp, CompWidth+30);
-	lv_obj_add_flag(cui_ButtonSwitchSmallComp, LV_OBJ_FLAG_OVERFLOW_VISIBLE);     /// Flags
-	
-	lv_obj_set_align(cui_ButtonSwitchSmallComp, LV_ALIGN_CENTER);
-	lv_obj_set_x(cui_ButtonSwitchSmallComp, x);
-    lv_obj_set_y(cui_ButtonSwitchSmallComp, y);
-    lv_obj_add_flag(cui_ButtonSwitchSmallComp, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(cui_ButtonSwitchSmallComp, LV_OBJ_FLAG_CLICKABLE);      /// Flags
-    lv_obj_set_style_arc_color(cui_ButtonSwitchSmallComp, lv_color_hex(0x83061F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(cui_ButtonSwitchSmallComp, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_ButtonSwitchSmallComp, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_ButtonSwitchSmallComp, 5, LV_PART_MAIN | LV_STATE_CHECKED);
-
-    lv_obj_set_style_arc_color(cui_ButtonSwitchSmallComp, lv_color_hex(0x31020B), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(cui_ButtonSwitchSmallComp, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_ButtonSwitchSmallComp, 5, LV_PART_INDICATOR | LV_STATE_CHECKED);
-
-	lv_obj_t * cui_ButtonSwitchSmall;	
-	cui_ButtonSwitchSmall = lv_imgbtn_create(cui_ButtonSwitchSmallComp);
-    if (size == 1)
-	{
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1640860301, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_743505413, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, &ui_img_743505413, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &ui_img_888658411, NULL);
-		lv_obj_set_height(cui_ButtonSwitchSmall, 120);
-		lv_obj_set_width(cui_ButtonSwitchSmall, 70);   /// 1
-	}
-	else
-	{
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1134846501, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_1528892059, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_CHECKED_PRESSED, NULL, &ui_img_1528892059, NULL);
-		lv_imgbtn_set_src(cui_ButtonSwitchSmall, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &ui_img_715952573, NULL);
-		lv_obj_set_height(cui_ButtonSwitchSmall, 205);
-		lv_obj_set_width(cui_ButtonSwitchSmall,  120);   /// 2
-	}
-
-	lv_obj_set_x(cui_ButtonSwitchSmall, 0);
-    lv_obj_set_y(cui_ButtonSwitchSmall, 0);
-    lv_obj_set_align(cui_ButtonSwitchSmall, LV_ALIGN_CENTER);
-    lv_obj_add_flag(cui_ButtonSwitchSmall, LV_OBJ_FLAG_CHECKABLE);     /// Flags
-    
-	lv_obj_t *cui_LblSwitchPeer = lv_label_create(cui_ButtonSwitchSmallComp);
-    if (!PeerName) lv_obj_add_flag(cui_LblSwitchPeer, LV_OBJ_FLAG_HIDDEN);
-	lv_obj_set_width(cui_LblSwitchPeer, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(cui_LblSwitchPeer, LV_SIZE_CONTENT);    /// 1
-    if (size == 1)
-	{
-		lv_obj_set_align(cui_LblSwitchPeer, LV_ALIGN_BOTTOM_RIGHT);
-		lv_obj_set_x(cui_LblSwitchPeer, -50);
-    	lv_obj_set_y(cui_LblSwitchPeer, -5);
-		lv_obj_set_style_text_font(cui_LblSwitchPeer, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-	}
-	else
-	{
-		/*lv_obj_set_x(cui_LblSwitchPeer, 0);
-    	lv_obj_set_y(cui_LblSwitchPeer, -65);
-		lv_obj_set_style_text_font(cui_LblSwitchPeer, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-    	lv_obj_set_align(cui_LblSwitchPeer, LV_ALIGN_CENTER);
-		*/
-		lv_obj_add_flag(cui_LblSwitchPeer, LV_OBJ_FLAG_HIDDEN);
-	}
-    if (PeerName) lv_label_set_text_fmt(cui_LblSwitchPeer, "%.6s", PeerName);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_BtnTxt);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_color_BtnTxt);
-    lv_obj_set_style_radius(cui_LblSwitchPeer, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
-                                           _ui_theme_color_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           _ui_theme_alpha_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_BtnBorder);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeer, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_BtnBorder);
-    lv_obj_set_style_border_width(cui_LblSwitchPeer, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(cui_LblSwitchPeer, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(cui_LblSwitchPeer, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(cui_LblSwitchPeer, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(cui_LblSwitchPeer, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-	lv_obj_t *cui_LblSwitchPeriph = lv_label_create(cui_ButtonSwitchSmallComp);
-    if (!PeriphName) lv_obj_add_flag(cui_LblSwitchPeriph, LV_OBJ_FLAG_HIDDEN);
-	if (size == 1)
-	{
-		lv_obj_set_align(cui_LblSwitchPeriph, LV_ALIGN_BOTTOM_RIGHT);
-		lv_obj_set_x(cui_LblSwitchPeriph, -50);
-    	lv_obj_set_y(cui_LblSwitchPeriph, -90);
-		lv_obj_set_style_text_font(cui_LblSwitchPeriph, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-	}
-	else
-	{
-		/*lv_obj_set_align(cui_LblSwitchPeriph, LV_ALIGN_CENTER);
-		lv_obj_set_x(cui_LblSwitchPeriph, 0);
-    	lv_obj_set_y(cui_LblSwitchPeriph, -95);
-		lv_obj_set_style_text_font(cui_LblSwitchPeriph, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
-		*/
-		lv_obj_add_flag(cui_LblSwitchPeriph, LV_OBJ_FLAG_HIDDEN);
-	}
-
-	lv_obj_set_width(cui_LblSwitchPeriph, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(cui_LblSwitchPeriph, LV_SIZE_CONTENT);    /// 1
-    if (PeriphName) lv_label_set_text_fmt(cui_LblSwitchPeriph, "%.6s", PeriphName);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_BtnTxt);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_BtnTxt);
-    lv_obj_set_style_radius(cui_LblSwitchPeriph, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
-                                           _ui_theme_color_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           _ui_theme_alpha_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_BtnBorder);
-    ui_object_set_themeable_style_property(cui_LblSwitchPeriph, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_BtnBorder);
-    lv_obj_set_style_border_width(cui_LblSwitchPeriph, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(cui_LblSwitchPeriph, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(cui_LblSwitchPeriph, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(cui_LblSwitchPeriph, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(cui_LblSwitchPeriph, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_t *cui_LblSwitchAmp = lv_label_create(cui_ButtonSwitchSmallComp);
-    if (size == 1)
-	{
-		lv_obj_set_width(cui_LblSwitchAmp, LV_SIZE_CONTENT);
-    	lv_obj_set_height(cui_LblSwitchAmp, LV_SIZE_CONTENT);    /// 1
-		lv_obj_set_align(cui_LblSwitchAmp, LV_ALIGN_BOTTOM_LEFT);
-		lv_obj_set_x(cui_LblSwitchAmp, 50);
-    	lv_obj_set_y(cui_LblSwitchAmp, -5);
-    	lv_obj_set_style_text_font(cui_LblSwitchAmp, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
-	}
-	else 
-	{
-		lv_obj_set_width(cui_LblSwitchAmp, 80);
-		lv_obj_set_height(cui_LblSwitchAmp, LV_SIZE_CONTENT);    /// 1
-		lv_obj_set_x(cui_LblSwitchAmp, 0);
-    	lv_obj_set_y(cui_LblSwitchAmp, 115);
-    	lv_obj_set_align(cui_LblSwitchAmp, LV_ALIGN_CENTER);
-		lv_obj_set_style_text_font(cui_LblSwitchAmp, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-	}
-    lv_label_set_text(cui_LblSwitchAmp, "28.8 A");
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_BtnTxt);
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_BtnTxt);
-    lv_obj_set_style_text_align(cui_LblSwitchAmp, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(cui_LblSwitchAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
-                                           _ui_theme_color_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           _ui_theme_alpha_BtnBg);
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR,
-                                           _ui_theme_color_BtnBorder);
-    ui_object_set_themeable_style_property(cui_LblSwitchAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA,
-                                           _ui_theme_alpha_BtnBorder);
-    lv_obj_set_style_border_width(cui_LblSwitchAmp, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(cui_LblSwitchAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(cui_LblSwitchAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(cui_LblSwitchAmp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(cui_LblSwitchAmp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_add_flag(cui_LblSwitchAmp, LV_OBJ_FLAG_HIDDEN);
-
-    lv_obj_t * cui_LblPosition;
-    cui_LblPosition = lv_label_create(cui_ButtonSwitchSmallComp);
-    lv_obj_set_width(cui_LblPosition, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(cui_LblPosition, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(cui_LblPosition, 20);
-    lv_obj_set_y(cui_LblPosition, 0);
-    lv_obj_set_align(cui_LblPosition, LV_ALIGN_CENTER);
-	lv_label_set_text_fmt(cui_LblPosition, "%d", Pos);
-    lv_obj_set_style_text_color(cui_LblPosition, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(cui_LblPosition, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_t ** children = (lv_obj_t **) lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_BUTTONSWITCHSMALL_NUM);
-    children[UI_COMP_BUTTONSWITCHSMALL_SPINNER] = cui_ButtonSwitchSmallComp;
-    children[UI_COMP_BUTTONSWITCHSMALL_BUTTONSWITCHSMALL] = cui_ButtonSwitchSmall;
-    children[UI_COMP_BUTTONSWITCHSMALL_LBLPEER] = cui_LblSwitchPeer;
-    children[UI_COMP_BUTTONSWITCHSMALL_LBLPERIPH] = cui_LblSwitchPeriph;
-    children[UI_COMP_BUTTONSWITCHSMALL_LBLVALUE] = cui_LblSwitchAmp;
-    children[UI_COMP_BUTTONSWITCHSMALL_LBLPOSITION] = cui_LblPosition;
-	lv_obj_add_event_cb(cui_ButtonSwitchSmall, get_component_child_event_cb, (lv_event_code_t)LV_EVENT_GET_COMP_CHILD, children);
-    lv_obj_add_event_cb(cui_ButtonSwitchSmall, del_component_child_event_cb, LV_EVENT_DELETE, children);
-    //ui_comp_ButtonSwitchSmall_create_hook(cui_ButtonSwitchSmall);
-    return cui_ButtonSwitchSmallComp;
-}
-
-lv_obj_t * ui_ButtonSwitchSpinner_create(lv_obj_t * comp_parent, lv_obj_t *Switch)
-{	
-lv_obj_t *cui_SpinnerSwitch = lv_spinner_create(comp_parent, 1000, 90);
-    lv_obj_set_align(cui_SpinnerSwitch, LV_ALIGN_CENTER);
-    lv_obj_set_width(cui_SpinnerSwitch, lv_obj_get_width(Switch)+30);
-    lv_obj_set_height(cui_SpinnerSwitch, lv_obj_get_width(Switch)+30);
-
-	Serial.printf("X von Schalter %d", lv_obj_get_x(Switch));
-	lv_obj_set_x(cui_SpinnerSwitch, lv_obj_get_x(Switch)-(360-lv_obj_get_width(Switch))/2);
-    lv_obj_set_y(cui_SpinnerSwitch, lv_obj_get_y(Switch)-(360-lv_obj_get_height(Switch))/2);
-    lv_obj_set_align(cui_SpinnerSwitch, LV_ALIGN_CENTER);
-    lv_obj_add_flag(cui_SpinnerSwitch, LV_OBJ_FLAG_HIDDEN);     /// Flags
-    lv_obj_clear_flag(cui_SpinnerSwitch, LV_OBJ_FLAG_CLICKABLE);      /// Flags
-    lv_obj_set_style_arc_color(cui_SpinnerSwitch, lv_color_hex(0x83061F), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(cui_SpinnerSwitch, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_SpinnerSwitch, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_SpinnerSwitch, 5, LV_PART_MAIN | LV_STATE_CHECKED);
-
-    lv_obj_set_style_arc_color(cui_SpinnerSwitch, lv_color_hex(0x31020B), LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_opa(cui_SpinnerSwitch, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
-    lv_obj_set_style_arc_width(cui_SpinnerSwitch, 5, LV_PART_INDICATOR | LV_STATE_CHECKED);
-
-	return cui_SpinnerSwitch;
-}

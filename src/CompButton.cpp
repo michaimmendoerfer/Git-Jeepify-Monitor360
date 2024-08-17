@@ -7,10 +7,17 @@
 #include "main.h"
 #include "CompButton.h"
 
+//#define DEBUG 1
+
+CompThing::CompThing()
+{
+}
+
 CompButton::CompButton()
 {
     //_Id = _ClassId;
     //_ClassId++;
+    _ClassType = 1;
 }
 
 void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
@@ -105,7 +112,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	{
 	    lv_obj_set_align(_LblPeer, LV_ALIGN_CENTER);
         lv_obj_set_x(_LblPeer, 0);
-    	lv_obj_set_y(_LblPeer, -65);
+    	lv_obj_set_y(_LblPeer, -115);
 	    lv_obj_set_style_text_font(_LblPeer, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
     
@@ -138,7 +145,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	{
 		lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
 		lv_obj_set_x(_LblPeriph, 0);
-    	lv_obj_set_y(_LblPeriph, -95);
+    	lv_obj_set_y(_LblPeriph, -145);
 		lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
 
@@ -159,41 +166,41 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_style_pad_bottom(_LblPeriph, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
     if (!_ShowLabels) lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
 
-    _LblAmp = lv_label_create(_Button);
+    _LblValue = lv_label_create(_Button);
     if (size == 1)
 	{
-		lv_obj_set_width(_LblAmp, LV_SIZE_CONTENT);
-    	lv_obj_set_height(_LblAmp, LV_SIZE_CONTENT);    /// 1
-		lv_obj_set_align(_LblAmp, LV_ALIGN_BOTTOM_LEFT);
-		lv_obj_set_x(_LblAmp, 50);
-    	lv_obj_set_y(_LblAmp, -5);
-    	lv_obj_set_style_text_font(_LblAmp, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);
+    	lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
+		lv_obj_set_align(_LblValue, LV_ALIGN_BOTTOM_LEFT);
+		lv_obj_set_x(_LblValue, 50);
+    	lv_obj_set_y(_LblValue, -5);
+    	lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
 	else 
 	{
-		lv_obj_set_width(_LblAmp, 80);
-		lv_obj_set_height(_LblAmp, LV_SIZE_CONTENT);    /// 2
-		lv_obj_set_x(_LblAmp, 0);
-    	lv_obj_set_y(_LblAmp, 115);
-    	lv_obj_set_align(_LblAmp, LV_ALIGN_CENTER);
-		lv_obj_set_style_text_font(_LblAmp, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+		lv_obj_set_width(_LblValue, 80);
+		lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 2
+		lv_obj_set_x(_LblValue, 0);
+    	lv_obj_set_y(_LblValue, 125);
+    	lv_obj_set_align(_LblValue, LV_ALIGN_CENTER);
+		lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
-    lv_label_set_text(_LblAmp, "28.8 A");
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR, _ui_theme_color_BtnTxt);
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_BtnTxt);
-    lv_obj_set_style_text_align(_LblAmp, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_radius(_LblAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, _ui_theme_color_BtnBg);
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_BtnBg);
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_BtnBorder);
-    ui_object_set_themeable_style_property(_LblAmp, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_BtnBorder);
-    lv_obj_set_style_border_width(_LblAmp, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(_LblAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(_LblAmp, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(_LblAmp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(_LblAmp, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text(_LblValue, "28.8 A");
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR, _ui_theme_color_BtnTxt);
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_BtnTxt);
+    lv_obj_set_style_text_align(_LblValue, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_radius(_LblValue, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, _ui_theme_color_BtnBg);
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_BtnBg);
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_BtnBorder);
+    ui_object_set_themeable_style_property(_LblValue, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_BtnBorder);
+    lv_obj_set_style_border_width(_LblValue, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(_LblValue, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(_LblValue, 5, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(_LblValue, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(_LblValue, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
 	
-    if (!_ShowLabels) lv_obj_add_flag(_LblAmp, LV_OBJ_FLAG_HIDDEN);
+    if (!_ShowLabels) lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
 
     _LblPeriphId = lv_label_create(_Button);
     lv_obj_set_width(_LblPeriphId, LV_SIZE_CONTENT);   /// 1
@@ -203,7 +210,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_align(_LblPeriphId, LV_ALIGN_CENTER);
 	lv_label_set_text_fmt(_LblPeriphId, "%d", _Periph->GetId());
     lv_obj_set_style_text_color(_LblPeriphId, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    //lv_obj_set_style_text_opa(_LblPeriphId, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(_LblPeriphId, LV_OBJ_FLAG_HIDDEN);
     
     _LblPos = lv_label_create(_Button);
     lv_obj_set_width(_LblPos, LV_SIZE_CONTENT);   /// 1
@@ -213,23 +220,113 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_align(_LblPos, LV_ALIGN_CENTER);
 	lv_label_set_text_fmt(_LblPos, "%d", _Pos);
     lv_obj_set_style_text_color(_LblPos, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    //lv_obj_set_style_text_opa(_LblPeriphId, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-    
+    lv_obj_add_flag(_LblPos, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
 	
 }
-/*CompButton::CompButton(lv_obj_t * comp_parent, int x, int y, int size, PeriphClass *Periph, lv_event_cb_t event_cb, float *ValueToFollow);
-{
-    _ValueToFollow = ValueToFollow;
-    //_FollowTimer = newTimer...
-	CompButton(comp_parent, x, y, size, Periph, event_cb);
-}
-*/
+
 CompButton::~CompButton()
 {
-    if (_Spinner) lv_obj_del(_Spinner);
-    if (_Button)  lv_obj_del(_Button);
+    Hide();
+    
     lv_obj_remove_event_cb(_Button, _event_cb);
+
+    Serial.println("CompButton Destructor");
+    if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
+    Serial.println("Spinner weg");
+    
+    if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
+    Serial.println("Button weg");
 }
 
+CompSensor::CompSensor()
+{
+    _ClassType = 2;
+}
+void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+{
+    _Button = lv_btn_create(comp_parent);
+    lv_obj_set_width(_Button, 120);
+    lv_obj_set_height(_Button, 120);
+    lv_obj_set_x(_Button, -45);
+    lv_obj_set_y(_Button, -45);
+    lv_obj_set_align(_Button, LV_ALIGN_CENTER);
+    lv_obj_add_flag(_Button, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(_Button, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_radius(_Button, 50, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(_Button, lv_color_hex(0x165420), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(_Button, 100, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(_Button, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(_Button, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(_Button, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_width(_Button, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_spread(_Button, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_ofs_x(_Button, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_ofs_y(_Button, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    
+    _LblPeer = lv_label_create(_Button);
+    lv_obj_set_width(_LblPeer, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeer, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeer, 0);
+    lv_obj_set_y(_LblPeer, 33);
+    lv_obj_set_align(_LblPeer, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeer, "Peer");
+    lv_obj_set_style_text_font(_LblPeer, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    _LblPeriph = lv_label_create(_Button);
+    lv_obj_set_width(_LblPeriph, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeriph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeriph, "Periph");
+    lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    _LblValue = lv_label_create(_Button);
+    lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblValue, 0);
+    lv_obj_set_y(_LblValue, -31);
+    lv_obj_set_align(_LblValue, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblValue, "value");
+
+    _LblPos = lv_label_create(_Button);
+    lv_obj_set_width(_LblPos, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPos, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPos, 25);
+    lv_obj_set_y(_LblPos, 18);
+    lv_obj_set_align(_LblPos, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPos, "P");
+    lv_obj_set_style_text_color(_LblPos, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblPos, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    _Arc = lv_arc_create(_Button);
+    lv_obj_set_width(_Arc, 120);
+    lv_obj_set_height(_Arc, 120);
+    lv_obj_set_align(_Arc, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(_Arc, LV_OBJ_FLAG_CLICKABLE);      /// Flags
+    lv_arc_set_value(_Arc, 0);
+    lv_obj_set_style_arc_color(_Arc, lv_color_hex(0x4A4A4A), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_opa(_Arc, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_width(_Arc, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_arc_color(_Arc, lv_color_hex(0x398F30), LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_opa(_Arc, 255, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+    lv_obj_set_style_arc_width(_Arc, 6, LV_PART_INDICATOR | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(_Arc, lv_color_hex(0xDBDBDB), LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(_Arc, 255, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(_Arc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(_Arc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(_Arc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(_Arc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
+
+    lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
+}
+
+CompSensor::~CompSensor()
+{
+    lv_obj_remove_event_cb(_Button, _event_cb);
+    Serial.println("CompSensor Destructor");
+    if (_Button) { lv_obj_del(_Button); _Button = NULL; }
+}

@@ -176,8 +176,6 @@ lv_obj_t * ui_Label4;
 void ui_ScrSwitch_screen_init(void);
 void ui_event_ScrSwitch(lv_event_t * e);
 lv_obj_t * ui_ScrSwitch;
-lv_obj_t * ui_LblSwitchPeer;
-lv_obj_t * ui_LblSwitchPeriph;
 void ui_event____initial_actions0(lv_event_t * e);
 lv_obj_t * ui____initial_actions0;
 const lv_img_dsc_t * ui_imgset_ansgarmodule_[1] = {&ui_img_ansgarmodule_4_png};

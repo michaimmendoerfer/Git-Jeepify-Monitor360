@@ -176,8 +176,6 @@ extern lv_obj_t * ui_Label4;
 void ui_ScrSwitch_screen_init(void);
 void ui_event_ScrSwitch(lv_event_t * e);
 extern lv_obj_t * ui_ScrSwitch;
-extern lv_obj_t * ui_LblSwitchPeer;
-extern lv_obj_t * ui_LblSwitchPeriph;
 void ui_event____initial_actions0(lv_event_t * e);
 extern lv_obj_t * ui____initial_actions0;
 
@@ -193,7 +191,6 @@ LV_IMG_DECLARE(ui_img_friedermodule_disp_png);    // assets/FriederModule_Disp.p
 LV_IMG_DECLARE(ui_img_horstrelais2_png);    // assets/HorstRelais2.png
 LV_IMG_DECLARE(ui_img_1769637049);    // assets/PeterRelais-1.png
 LV_IMG_DECLARE(ui_img_rolfmodule_round_png);    // assets/RolfModule_round.png
-LV_IMG_DECLARE(ui_img_btn_off_png);    // assets/Btn_off.png
 LV_IMG_DECLARE(ui_img_1528892059);    // assets/kipp-1-neutral-120.png
 LV_IMG_DECLARE(ui_img_743505413);    // assets/kipp-1-neutral-70.png
 LV_IMG_DECLARE(ui_img_1134846501);    // assets/kipp-1-off-120.png

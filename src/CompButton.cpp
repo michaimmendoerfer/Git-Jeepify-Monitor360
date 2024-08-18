@@ -12,14 +12,23 @@
 CompThing::CompThing()
 {
 }
-
 CompButton::CompButton()
 {
-    //_Id = _ClassId;
-    //_ClassId++;
     _ClassType = 1;
 }
+CompButton::~CompButton()
+{
+    Hide();
+    
+    lv_obj_remove_event_cb(_Button, _event_cb);
 
+    Serial.println("CompButton Destructor");
+    if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
+    Serial.println("Spinner weg");
+    
+    if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
+    Serial.println("Button weg");
+}
 void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
     _Periph = Periph;
@@ -226,31 +235,36 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	
 }
 
-CompButton::~CompButton()
-{
-    Hide();
-    
-    lv_obj_remove_event_cb(_Button, _event_cb);
-
-    Serial.println("CompButton Destructor");
-    if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
-    Serial.println("Spinner weg");
-    
-    if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
-    Serial.println("Button weg");
-}
-
 CompSensor::CompSensor()
 {
     _ClassType = 2;
 }
+CompSensor::~CompSensor()
+{
+    lv_obj_remove_event_cb(_Button, _event_cb);
+    Serial.println("CompSensor Destructor");
+    if (_Button) { lv_obj_del(_Button); _Button = NULL; }
+}
 void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
+    _Periph = Periph;
+    _event_cb = event_cb;
+    _ShowLabels = ShowLabels;
+    _Pos = Pos;
+   
+    _x = x;
+    _y = y;		
+
+    _Width  = 100;
+    _Height = 100;
+    
+    //Serial.printf("Pos: %d, x:%d, y:%d\n\r", Pos, x, y);
+    
     _Button = lv_btn_create(comp_parent);
-    lv_obj_set_width(_Button, 120);
-    lv_obj_set_height(_Button, 120);
-    lv_obj_set_x(_Button, -45);
-    lv_obj_set_y(_Button, -45);
+    lv_obj_set_width(_Button, _Width);
+    lv_obj_set_height(_Button, _Height);
+    lv_obj_set_x(_Button, x);
+    lv_obj_set_y(_Button, y);
     lv_obj_set_align(_Button, LV_ALIGN_CENTER);
     lv_obj_add_flag(_Button, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(_Button, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -267,28 +281,48 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 
     
     _LblPeer = lv_label_create(_Button);
+    if (!PeerOf(Periph)->GetName()) 
+	{
+	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
+	}
+	else
+	{
+	    lv_label_set_text_fmt(_LblPeer, "%.6s", PeerOf(Periph)->GetName());
+	}
+
     lv_obj_set_width(_LblPeer, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(_LblPeer, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(_LblPeer, 0);
-    lv_obj_set_y(_LblPeer, 33);
+    lv_obj_set_y(_LblPeer, 25);
     lv_obj_set_align(_LblPeer, LV_ALIGN_CENTER);
-    lv_label_set_text(_LblPeer, "Peer");
     lv_obj_set_style_text_font(_LblPeer, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     _LblPeriph = lv_label_create(_Button);
+    
+    if (!_Periph->GetName()) lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+    else lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
     lv_obj_set_width(_LblPeriph, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(_LblPeriph, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
-    lv_label_set_text(_LblPeriph, "Periph");
     lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     _LblValue = lv_label_create(_Button);
     lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(_LblValue, 0);
-    lv_obj_set_y(_LblValue, -31);
+    lv_obj_set_y(_LblValue, -25);
     lv_obj_set_align(_LblValue, LV_ALIGN_CENTER);
-    lv_label_set_text(_LblValue, "value");
+    lv_label_set_text(_LblValue, "28.8 A");
+
+    _LblPeriphId = lv_label_create(_Button);
+    lv_obj_set_width(_LblPeriphId, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeriphId, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeriphId, 80);
+    lv_obj_set_y(_LblPeriphId, 0);
+    lv_obj_set_align(_LblPeriphId, LV_ALIGN_CENTER);
+	lv_label_set_text_fmt(_LblPeriphId, "%d", _Periph->GetId());
+    lv_obj_set_style_text_color(_LblPeriphId, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_add_flag(_LblPeriphId, LV_OBJ_FLAG_HIDDEN);
 
     _LblPos = lv_label_create(_Button);
     lv_obj_set_width(_LblPos, LV_SIZE_CONTENT);   /// 1
@@ -296,13 +330,13 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_x(_LblPos, 25);
     lv_obj_set_y(_LblPos, 18);
     lv_obj_set_align(_LblPos, LV_ALIGN_CENTER);
-    lv_label_set_text(_LblPos, "P");
+    lv_label_set_text_fmt(_LblPos, "%d", _Pos);
     lv_obj_set_style_text_color(_LblPos, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(_LblPos, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     _Arc = lv_arc_create(_Button);
-    lv_obj_set_width(_Arc, 120);
-    lv_obj_set_height(_Arc, 120);
+    lv_obj_set_width(_Arc, _Width);
+    lv_obj_set_height(_Arc, _Height);
     lv_obj_set_align(_Arc, LV_ALIGN_CENTER);
     lv_obj_clear_flag(_Arc, LV_OBJ_FLAG_CLICKABLE);      /// Flags
     lv_arc_set_value(_Arc, 0);
@@ -324,9 +358,3 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
 }
 
-CompSensor::~CompSensor()
-{
-    lv_obj_remove_event_cb(_Button, _event_cb);
-    Serial.println("CompSensor Destructor");
-    if (_Button) { lv_obj_del(_Button); _Button = NULL; }
-}

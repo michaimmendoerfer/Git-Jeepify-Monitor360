@@ -8,6 +8,9 @@
 #include "LinkedList.h"
 #include <Preferences.h>
 
+#define SCREEN_X 360
+#define SCREEN_Y 360
+
 void   PrintMAC(const uint8_t * mac_addr);
 
 void   OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);

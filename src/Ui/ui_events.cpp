@@ -757,18 +757,7 @@ void Ui_Multi_Next(lv_event_t * e)
 	if (ActiveMultiScreen == MULTI_SCREENS) ActiveMultiScreen = 0;
 	Serial.printf("Schalte auf MultiScreen: %d\n\r", ActiveMultiScreen);
 	
-	for (int Pos = 0; Pos<PERIPH_PER_SCREEN; Pos++)
-	{
-		if (MultiComponent[Pos])
-		{
-			lv_obj_add_flag(lv_obj_get_child(MultiComponent[Pos], 0), LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lv_obj_get_child(MultiComponent[Pos], 1), LV_OBJ_FLAG_HIDDEN);
-			lv_obj_add_flag(lv_obj_get_child(MultiComponent[Pos], 2), LV_OBJ_FLAG_HIDDEN);
-			lv_obj_del(MultiComponent[Pos]);
-			MultiComponent[Pos] = NULL;
-		}
-	}
-
+	Ui_Multi_Unload(e);
 	Ui_Multi_Loaded(e);
 	//_ui_screen_change(&ui_ScrMulti, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrMulti_screen_init);
 }
@@ -778,15 +767,7 @@ void Ui_Multi_Prev(lv_event_t * e)
 	if (ActiveMultiScreen == -1) ActiveMultiScreen = MULTI_SCREENS-1;
 	Serial.printf("Schalte auf MultiScreen: %d\n\r", ActiveMultiScreen);
 	
-	for (int Pos = 0; Pos<PERIPH_PER_SCREEN; Pos++)
-	{
-		if (MultiComponent[Pos])
-		{
-			lv_obj_del(MultiComponent[Pos]);
-			MultiComponent[Pos] = NULL;
-		}
-	}
-	
+	Ui_Multi_Unload(e);
 	Ui_Multi_Loaded(e);
 	//_ui_screen_change(&ui_ScrMulti, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrMulti_screen_init);
 }

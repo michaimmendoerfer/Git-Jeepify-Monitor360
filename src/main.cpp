@@ -8,7 +8,7 @@
 
 const char *_Version = "V 3.61";
 const char *_Name = "Monitor 360";
-const char _Protokoll_Version[] = "1.01";
+const char _Protokoll_Version[] = "1.10";
 
 #pragma region Includes
 #include <Arduino.h>

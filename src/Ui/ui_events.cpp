@@ -275,7 +275,8 @@ void Ui_Single_Next(lv_event_t * e)
 	
 	if (ActivePeriphSingle)
 	{
-		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_NONE, 50, 0, &ui_ScrSingle_screen_init);
+		Ui_Single_Leave(e);
+		Ui_Single_Prepare(e);
 	}
 }
 
@@ -288,7 +289,8 @@ void Ui_Single_Last(lv_event_t * e)
 	
 	if (ActivePeriphSingle)
 	{
-		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_NONE, 50, 0, &ui_ScrSingle_screen_init);
+		Ui_Single_Leave(e);
+		Ui_Single_Prepare(e);
 	}
 }
 

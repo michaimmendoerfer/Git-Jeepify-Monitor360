@@ -125,22 +125,26 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                                 SaveNeeded = true;
                                 if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].Name is now: %s\n", P->GetName(), Si, P->GetPeriphName(Si));
                         }
-
-                        snprintf(Buf, sizeof(Buf), "B%d", Si);                      // get B0 (Brother of Periph 0)
-                        if (doc.containsKey(Buf)) 
-                        {
-                            int Brother = (int) doc[Buf];
-
-                            if (Brother !=  P->GetPeriphBrotherId(Si))
-                            {
-                                P->SetPeriphBrotherId(Si, Brother);
-                                if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].Brother is now: %d\n", P->GetName(), Si, P->GetPeriphBrotherId(Si));
-                            }
-                        }
                     } 
+                }
+                for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
+                    snprintf(Buf, sizeof(Buf), "B%d", Si);                      // get B0 (Brother of Periph 0)
+                    if (doc.containsKey(Buf)) 
+                    {
+                        int Brother = (int) doc[Buf];
+                        int BrotherId = P->GetPeriphPtr(Brother)->GetId();
+
+                        if (P->GetPeriphBrotherId(Si) != BrotherId)              
+                        {
+                            P->SetPeriphBrotherId(Si, BrotherId);
+                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherId is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherId(Si), FindPeriphById(BrotherId)->GetName());
+                        }
+                     }
                 }
                 SendPairingConfirm(P); 
             }
+
+            
             /*// "Order"="UpdateName"; "Pos"="32; "NewName"="Horst"; Pos 99 is moduleName
             else if (Order == SEND_CMD_UPDATE_NAME)// vieleicht bald weg
             {

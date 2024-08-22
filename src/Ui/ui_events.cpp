@@ -340,21 +340,7 @@ void SingleUpdateTimer(lv_timer_t * timer)
 	
 	if (ActivePeriphSingle)
 	{
-		value = ActivePeriphSingle->GetValue();
-		//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
-		if (abs(value) < SCHWELLE) value = 0;
-
-		if      (value<10)  nk = 2;
-		else if (value<100) nk = 1;
-		else                nk = 0;
-
-		if (value == -99) strcpy(buf, "--"); 
-		else dtostrf(value, 0, nk, buf);
-
-		if (ActivePeriphSingle->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
-		if (ActivePeriphSingle->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
-
-		((CompMeter *)CompThingArray[Pos])->SetIndicator(value*10);
+		((CompMeter *)CompThingArray[Pos])->Update();
 		
 		//lv_meter_set_indicator_value(SingleMeter, SingleIndicNeedle, value*10);
 		//lv_label_set_text(ui_LblSingleValue, buf);

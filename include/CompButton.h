@@ -120,8 +120,12 @@ class CompMeter : public CompThing {
 
         void SetupModern (lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
         void SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
-        
-        void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
+
+	void Update();
+
+	void SetNeedle(float value) { lv_meter_set_indicator_value(_Meter, _IndicNeedle, value); }
+
+	void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
         void Show() { lv_obj_clear_flag(_Meter, LV_OBJ_FLAG_HIDDEN); }
 };
 

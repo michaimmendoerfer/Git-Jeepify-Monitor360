@@ -377,7 +377,7 @@ CompMeter::~CompMeter()
     Serial.println("Meter weg");
 }
 
-void CompButton::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
     _Periph = Periph;
     _event_cb = event_cb;
@@ -497,7 +497,7 @@ void CompButton::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int 
     lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
-void CompButton::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+void CompMeter::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
     _Periph = Periph;
     _event_cb = event_cb;
@@ -615,6 +615,22 @@ void CompButton::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int
     lv_obj_set_style_text_opa(_LblValue, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
+
+void CompMeter::Update()
+{
+	value = _Periph->GetValue();
+	//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
+	if (abs(value) < SCHWELLE) value = 0;
+
+	if      (value<10)  nk = 2;
+	else if (value<100) nk = 1;
+	else                nk = 0;
+
+	if (value == -99) strcpy(buf, "--"); 
+	else dtostrf(value, 0, nk, buf);
+
+	if (_Periph->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
+	if (_Periph->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
 
 static void SingleMeter_cb(lv_event_t * e) {
 

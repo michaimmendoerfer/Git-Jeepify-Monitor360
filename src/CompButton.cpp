@@ -358,3 +358,123 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
 }
 
+CompMeter::CompMeter()
+{
+}
+CompMeter::CompMeter()
+{
+    _ClassType = 3;
+}
+CompMeter::~CompMeter()
+{
+    Hide();
+    
+    lv_obj_remove_event_cb(_Button, _event_cb);
+
+    Serial.println("CompButton Destructor");
+    if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
+    Serial.println("Spinner weg");
+    
+    if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
+    Serial.println("Button weg");
+}
+
+void CompButton::SetupSimple(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+{
+    _Periph = Periph;
+    _event_cb = event_cb;
+    _ShowLabels = ShowLabels;
+    _Pos = Pos;
+   
+    _x = x;
+    _y = y;		
+
+    switch (size) {
+	case 1: _Width  = 100; _Height = 100; break
+	case 2: _Width  = 240; _Height = 240; break
+	case 3: _Width  = 360; _Height = 360; break
+		
+	if (Meter)
+	{
+		lv_obj_del(Meter);
+		Meter = NULL;
+	}
+		
+	Meter = lv_meter_create(comp_parent);
+	lv_obj_center(Meter);
+	lv_obj_set_style_bg_color(Meter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+	lv_obj_set_style_bg_opa(Meter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+	lv_obj_set_size(Meter, _x, _y);
+	Scale = lv_meter_add_scale(Meter);
+	
+	lv_obj_move_background(Meter);
+	lv_obj_set_style_text_color(Meter, lv_color_hex(0xdbdbdb), LV_PART_TICKS);
+	
+	IndicNeedle = lv_meter_add_needle_line(Meter, Scale, 4, lv_palette_main(LV_PALETTE_GREY), -10);
+
+	
+	if ((Periph) and (Periph->GetType() == SENS_TYPE_AMP))
+	{
+		lv_meter_set_scale_ticks(Meter, Scale, 41, 2, 10, lv_palette_main(LV_PALETTE_GREY));
+    	lv_meter_set_scale_major_ticks(Meter, Scale, 5, 4, 15, lv_color_black(), 15);
+    	lv_meter_set_scale_range(Meter, Scale, 0, 400, 240, 150);
+	
+		//Add a green arc to the start
+		Indic = lv_meter_add_scale_lines(Meter, Scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
+    	lv_meter_set_indicator_start_value(Meter, Indic, 0);
+    	lv_meter_set_indicator_end_value(Meter, Indic, 250);
+
+		Indic = lv_meter_add_arc(Meter, Scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
+    	lv_meter_set_indicator_start_value(Meter, Indic, 300);
+    	lv_meter_set_indicator_end_value(Meter, Indic, 400);
+
+		//Make the tick lines red at the end of the scale
+		Indic = lv_meter_add_scale_lines(Meter, Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+		lv_meter_set_indicator_start_value(Meter, Indic, 300);
+		lv_meter_set_indicator_end_value(Meter, Indic, 400);
+
+		lv_obj_add_event_cb(Meter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+	}
+	else if ((Periph) and (Periph->GetType() == SENS_TYPE_VOLT))
+	{	
+		lv_meter_set_scale_ticks(Meter, Scale, 31, 2, 10, lv_palette_main(LV_PALETTE_GREY));
+    	lv_meter_set_scale_major_ticks(Meter, Scale, 5, 4, 15, lv_color_black(), 15);
+    	lv_meter_set_scale_range(Meter, scale, 90, 150, 240, 150);
+	
+		Indic = lv_meter_add_scale_lines(Meter, Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+    	lv_meter_set_indicator_start_value(Meter, Indic, 90);
+    	lv_meter_set_indicator_end_value(Meter, Indic, 112);
+		
+		//Add a green arc to the start
+		Indic = lv_meter_add_scale_lines(Meter, Scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
+    	lv_meter_set_indicator_start_value(Meter, Indic, 112);
+    	lv_meter_set_indicator_end_value(Meter, Indic, 144);
+
+		Indic = lv_meter_add_arc(Meter, Scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
+    	lv_meter_set_indicator_start_value(Meter, Indic, 144);
+    	lv_meter_set_indicator_end_value(Meter, Indic, 150);
+
+		//Make the tick lines red at the end of the scale
+		Indic = lv_meter_add_scale_lines(Meter, Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+		lv_meter_set_indicator_start_value(Meter, Indic, 144);
+		lv_meter_set_indicator_end_value(Meter, Indic, 150);
+
+		//Add draw callback to override default values
+		lv_obj_add_event_cb(Meter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+	}
+	lv_obj_add_event_cb(_Meter, _event_cb, LV_EVENT_CLICKED, NULL);
+    }
+
+
+static void SingleMeter_cb(lv_event_t * e) {
+
+	lv_obj_draw_part_dsc_t	*dsc  = (lv_obj_draw_part_dsc_t *)lv_event_get_param(e);
+	double					value;
+
+	if( dsc->text != NULL ) {		// Filter major ticks...
+		value = dsc->value / 10;
+		snprintf(dsc->text, sizeof(dsc->text), "%5.1f", value);
+	}
+
+}
+

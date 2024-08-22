@@ -618,8 +618,12 @@ void CompMeter::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int 
 
 void CompMeter::Update()
 {
+	char buf[10];
+	int nk = 0;
+	float value;
+	
 	value = _Periph->GetValue();
-	//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
+	
 	if (abs(value) < SCHWELLE) value = 0;
 
 	if      (value<10)  nk = 2;
@@ -631,6 +635,9 @@ void CompMeter::Update()
 
 	if (_Periph->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
 	if (_Periph->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
+
+	SetNeedle(value*10);
+	SetValue(buf);
 
 static void SingleMeter_cb(lv_event_t * e) {
 

@@ -108,10 +108,10 @@ class CompSensor : public CompThing {
 
 class CompMeter : public CompThing {
     private:
-	lv_obj_t *Meter;
-	lv_meter_indicator_t * Indic;
-	lv_meter_indicator_t * IndicNeedle;
-	lv_meter_scale_t * Scale;
+	lv_obj_t *_Meter;
+	lv_meter_indicator_t * _Indic;
+	lv_meter_indicator_t * _IndicNeedle;
+	lv_meter_scale_t * _Scale;
 
     public:
 	CompMeter();
@@ -119,8 +119,8 @@ class CompMeter : public CompThing {
 
         void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
         
-        void Hide() { lv_obj_add_flag  (_Button, LV_OBJ_FLAG_HIDDEN); }
-        void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
+        void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
+        void Show() { lv_obj_clear_flag(_Meter, LV_OBJ_FLAG_HIDDEN); }
 };
 
 #endif

@@ -54,7 +54,7 @@ class CompThing {
 
         void SetPeriph(char *Buf) { lv_label_set_text(_LblPeriph, Buf); }
 		void ShowPeriph() { lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN); };			
-        void HidePeriiph() { lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); };	
+        void HidePeriph() { lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); };	
 
         void SetValue(char *Buf) { lv_label_set_text(_LblValue, Buf); }
         void ShowValue() { lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN); };			

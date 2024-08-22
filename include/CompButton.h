@@ -107,6 +107,13 @@ class CompSensor : public CompThing {
 };
 
 class CompMeter : public CompThing {
+    private:
+	lv_obj_t *Meter;
+	lv_meter_indicator_t * Indic;
+	lv_meter_indicator_t * IndicNeedle;
+	lv_meter_scale_t * Scale;
+
+    public:
 	CompMeter();
         ~CompMeter();
 

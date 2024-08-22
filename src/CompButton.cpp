@@ -462,6 +462,39 @@ void CompButton::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int 
 		lv_obj_add_event_cb(_Meter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
 		lv_obj_add_event_cb(_Meter, _event_cb, LV_EVENT_CLICKED, NULL);
 	}
+
+	_LblPeer = lv_label_create(_Meter);
+    lv_obj_set_width(_LblPeer, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeer, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeer, 0);
+    lv_obj_set_y(_LblPeer, lv_pct(30));
+    lv_obj_set_align(_LblPeer, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeer, "Peer");
+    lv_obj_set_style_text_color(_LblPeer, lv_color_hex(0xAD0808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblPeer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblPeer, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+	_LblPeriph = lv_label_create(_Meter);
+    lv_obj_set_width(_LblPeriph, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeriph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeriph, 0);
+    lv_obj_set_y(_LblPeriph, lv_pct(-20));
+    lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeriph, "Periph");
+    lv_obj_set_style_text_color(_LblPeriph, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblPeriph, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+		
+    _LblValue = lv_label_create(_Meter);
+    lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblValue, 0);
+    lv_obj_set_y(_LblValue, lv_pct(15));
+    lv_obj_set_align(_LblValue, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblValue, "Value");
+    lv_obj_set_style_text_color(_LblValue, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblValue, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
     }
 
 void CompButton::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
@@ -548,7 +581,41 @@ void CompButton::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int
 		lv_obj_add_event_cb(_Meter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
 		lv_obj_add_event_cb(_Meter, _event_cb, LV_EVENT_CLICKED, NULL);
 	}
+
+	_LblPeer = lv_label_create(_Meter);
+    lv_obj_set_width(_LblPeer, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeer, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeer, 0);
+    lv_obj_set_y(_LblPeer, lv_pct(30));
+    lv_obj_set_align(_LblPeer, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeer, "Peer");
+    lv_obj_set_style_text_color(_LblPeer, lv_color_hex(0xAD0808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblPeer, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblPeer, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+	_LblPeriph = lv_label_create(_Meter);
+    lv_obj_set_width(_LblPeriph, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblPeriph, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblPeriph, 0);
+    lv_obj_set_y(_LblPeriph, lv_pct(-20));
+    lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblPeriph, "Periph");
+    lv_obj_set_style_text_color(_LblPeriph, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblPeriph, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+		
+    _LblValue = lv_label_create(_Meter);
+    lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(_LblValue, 0);
+    lv_obj_set_y(_LblValue, lv_pct(15));
+    lv_obj_set_align(_LblValue, LV_ALIGN_CENTER);
+    lv_label_set_text(_LblValue, "Value");
+    lv_obj_set_style_text_color(_LblValue, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(_LblValue, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
 }
+
 static void SingleMeter_cb(lv_event_t * e) {
 
 	lv_obj_draw_part_dsc_t	*dsc  = (lv_obj_draw_part_dsc_t *)lv_event_get_param(e);

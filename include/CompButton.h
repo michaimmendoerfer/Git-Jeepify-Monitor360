@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "lvgl.h"
 #include "Ui/ui.h"
+#include "lv_meter.h"
 #include "PeerClass.h"
 #include "pref_manager.h"
 #include "LinkedList.h"
@@ -117,7 +118,8 @@ class CompMeter : public CompThing {
 	CompMeter();
         ~CompMeter();
 
-        void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        void SetupModern (lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        void SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
         
         void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
         void Show() { lv_obj_clear_flag(_Meter, LV_OBJ_FLAG_HIDDEN); }

@@ -31,6 +31,9 @@ class CompThing {
         lv_obj_t *_LblValue;
 
         PeriphClass *_Periph;
+	
+	float *_ValueToFollow;
+        bool _ShowLabels;
 
         lv_event_cb_t _event_cb;
 
@@ -62,10 +65,7 @@ class CompThing {
 class CompButton : public CompThing {
 
     private:
-        float *_ValueToFollow;
-        bool _ShowLabels;
-
-        lv_obj_t *_Spinner;
+	lv_obj_t *_Spinner;
 
     public:
         CompButton();
@@ -90,9 +90,6 @@ class CompButton : public CompThing {
 class CompSensor : public CompThing {
 
     private:
-        float *_ValueToFollow;
-        bool _ShowLabels;
-
         lv_obj_t *_Arc;
 
     public:
@@ -106,6 +103,16 @@ class CompSensor : public CompThing {
 
         lv_obj_t *GetArc() { return _Arc; }
 	//void Follow(float *Value);
+};
+
+class CompMeter : public CompThing {
+	CompMeter();
+        ~CompMeter();
+
+        void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        
+        void Hide() { lv_obj_add_flag  (_Button, LV_OBJ_FLAG_HIDDEN); }
+        void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
 };
 
 #endif

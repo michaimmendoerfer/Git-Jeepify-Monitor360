@@ -10,6 +10,7 @@
 #include "Jeepify.h"
 #include "main.h"
 #include "CompButton.h"
+
 class CompThing {
     static int  _ClassId;
 

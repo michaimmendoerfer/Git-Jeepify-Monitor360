@@ -68,6 +68,7 @@ class CompButton : public CompThing {
 
     private:
 	lv_obj_t *_Spinner;
+	bool _MobileLabels;
 
     public:
         CompButton();
@@ -81,6 +82,9 @@ class CompButton : public CompThing {
         void SetAmp(char *Buf) { SetValue(Buf); }
 		void ShowAmp() { ShowValue(); }		
         void HideAmp() { HideValue(); }	
+
+	bool GetMobileLabels() { return _MobileLabels; }
+	void SetMobileLabels(bool MobileLabels) { _MobileLabels = MobileLabels; }
 
         void Hide() { lv_obj_add_flag  (_Button, LV_OBJ_FLAG_HIDDEN); SpinnerOff(); }
         void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }

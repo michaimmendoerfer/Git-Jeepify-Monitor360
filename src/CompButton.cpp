@@ -53,15 +53,10 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     _x = x;
     _y = y;			
 	
-    if (size == 1)
+    switch (size) 
     {
-        _Width  = COMPBUTTON_WIDTH_1;
-        _Height = COMPBUTOON_HEIGHT_1;
-    }
-    else
-    {
-        _Width  = COMPBUTTON_WIDTH_2;
-        _Height = COMPBUTOON_HEIGHT_2;
+	case 1: _Width  = COMPBUTTON_WIDTH_1; _Height = COMPBUTOON_HEIGHT_1; break;
+    	cas2 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
     }
 	
     _Spinner = lv_spinner_create(comp_parent, 1000, 90);
@@ -269,9 +264,11 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     _x = x;
     _y = y;		
 
-    _Width  = COMPSENSOR_WIDTH_1;
-    _Height = COMPSENSOR_HEIGHT_1;
-    
+    switch (size) 
+    {
+	case 1: _Width  = COMPSENSOR_WIDTH_1; _Height = COMPSENSOR_HEIGHT_1; break;
+    }
+	
     //Serial.printf("Pos: %d, x:%d, y:%d\n\r", Pos, x, y);
     
     _Button = lv_btn_create(comp_parent);
@@ -405,7 +402,7 @@ void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int s
 	case 1: _Width  = COMPMETER_WIDTH_1; _Height = COMPMETER_HEIGHT_1; break
 	case 2: _Width  = COMPMETER_WIDTH_2; _Height = COMPMETER_HEIGHT_2; break
 	case 3: _Width  = COMPMETER_WIDTH_3; _Height = COMPMETER_HEIGHT_3; break
-		
+		}	
 	if (Meter)
 	{
 		lv_obj_del(Meter);
@@ -525,7 +522,7 @@ void CompMeter::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int 
 	case 1: _Width  = 100; _Height = 100; break
 	case 2: _Width  = 240; _Height = 240; break
 	case 3: _Width  = 360; _Height = 360; break
-		
+    }	
 	if (Meter)
 	{
 		lv_obj_del(Meter);

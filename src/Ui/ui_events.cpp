@@ -445,13 +445,6 @@ void Ui_Multi_Loaded(lv_event_t * e)
 }
 void MultiUpdateTimer(lv_timer_t * timer)
 {
-	lv_obj_t *CompBase;
-
-	static char ValueBuf[10];
-	static int nk = 0;
-	static float value;
-	lv_color_t bg;
-
 	Serial.printf("MultiTimer - Screen[%d] \n\r",ActiveMultiScreen);
 	
 	for (int Pos=0; Pos<PERIPH_PER_SCREEN; Pos++) 
@@ -460,100 +453,11 @@ void MultiUpdateTimer(lv_timer_t * timer)
 
 		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0)
 		{
-			CompBase = CompThingArray[Pos]->GetButton();
-			value = Screen[ActiveMultiScreen].GetPeriph(Pos)->GetValue();
-			if      (value<10)  nk = 2;
-			else if (value<100) nk = 1;
-			else                nk = 0;
-
-			if (value == -99) strcpy(ValueBuf, "--"); 
-			else dtostrf(value, 0, nk, ValueBuf);
-
-			switch (Screen[ActiveMultiScreen].GetPeriph(Pos)->GetType()) 
-			{
-				case SENS_TYPE_AMP:
-					strcat(ValueBuf, " A");
-					
-					if 		(value < 20) bg = lv_color_hex(0x135A25);
-					else if (value < 25) bg = lv_color_hex(0x7C7E26);
-					else 				 bg = lv_color_hex(0x88182C);
-
-					lv_obj_set_style_bg_color(CompBase, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
-					CompThingArray[Pos]->SetValue(ValueBuf);
-
-					lv_arc_set_range(((CompSensor *)CompThingArray[Pos])->GetArc(), 0, 400);
-					lv_arc_set_value(((CompSensor *)CompThingArray[Pos])->GetArc(), value*10);
-					
-					break;
-				case SENS_TYPE_VOLT:
-					strcat(ValueBuf, " V");
-					
-					if 		(value < 13)   bg = lv_color_hex(0x135A25);
-					else if (value < 14.4) bg = lv_color_hex(0x7C7E26);
-					else 				   bg = lv_color_hex(0x88182C);
-
-					lv_obj_set_style_bg_color(CompBase, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
-					CompThingArray[Pos]->SetValue(ValueBuf);
-
-					lv_arc_set_range(((CompSensor *)CompThingArray[Pos])->GetArc(), 90, 150);
-					lv_arc_set_value(((CompSensor *)CompThingArray[Pos])->GetArc(), value*10);
-
-					break;
-				case SENS_TYPE_SWITCH:
-					if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
-					{
-						((CompButton *) CompThingArray[Pos])->SetButtonState(true);
-
-						//ggf show Sens-brother
-
-						lv_obj_t *BrotherValueLbl;
-						if (CompThingArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
-						{
-							PeriphClass *Brother = FindPeriphById(CompThingArray[Pos]->GetPeriph()->GetBrotherId());
-							if (Brother)
-							{
-								char buf[10];
-								int nk = 0;
-								float value = Brother->GetValue();
-								
-								if      (value<10)  nk = 2;
-								else if (value<100) nk = 1;
-								else                nk = 0;
-
-								if (value == -99) strcpy(buf, "--"); 
-								else dtostrf(value, 0, nk, buf);
-
-								strcat(buf, " A");
-
-								((CompButton *) CompThingArray[Pos])->SetAmp(buf);
-								((CompButton *) CompThingArray[Pos])->ShowAmp();
-							}
-							else
-							{
-								((CompButton *) CompThingArray[Pos])->HideAmp();
-							}
-						}
-					}
-					else
-					{
-						((CompButton *) CompThingArray[Pos])->SetButtonState(false);
-						//Serial.println("Schalter ist aus");
-						
-					}
-					
-					if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
-					{
-						((CompButton *) CompThingArray[Pos])->SpinnerOff();
-					}
-					else
-					{
-						((CompButton *) CompThingArray[Pos])->SpinnerOn();
-					}
-					break;
-			}
+			CompThingArray[Pos]->Update();
 		}
 	}
 }
+
 void Ui_Multi_Button_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
@@ -705,54 +609,8 @@ void Ui_Multi_Prev(lv_event_t * e)
 #pragma region Screen_Switch
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
-	int Pos = 0;
-
-	Serial.println("Begin SwitchTimer");
-	if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
-	{
-		((CompButton *) CompThingArray[Pos])->SetButtonState(true);
-
-		lv_obj_t *BrotherValueLbl;
-		if (CompThingArray[Pos]->GetPeriph()->GetBrotherId() != -1)   
-		{
-			PeriphClass *Brother = FindPeriphById(CompThingArray[Pos]->GetPeriph()->GetBrotherId());
-			if (Brother)
-			{
-				char buf[10];
-				int nk = 0;
-				float value = Brother->GetValue();
-				
-				if      (value<10)  nk = 2;
-				else if (value<100) nk = 1;
-				else                nk = 0;
-
-				if (value == -99) strcpy(buf, "--"); 
-				else dtostrf(value, 0, nk, buf);
-
-				strcat(buf, " A");
-
-				((CompButton *) CompThingArray[Pos])->SetAmp(buf);
-				((CompButton *) CompThingArray[Pos])->ShowAmp();
-			}
-			else
-			{
-				((CompButton *) CompThingArray[Pos])->HideAmp();
-			}
-		}
-	}
-	else
-	{
-		((CompButton *) CompThingArray[Pos])->SetButtonState(false);
-	}
-	
-	if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
-	{
-		((CompButton *) CompThingArray[Pos])->SpinnerOff();
-	}
-	else
-	{
-		((CompButton *) CompThingArray[Pos])->SpinnerOn();
-	}
+	int Pos = 0;	
+	CompThingArray[Pos]->Update();
 }
 void Ui_Switch_Next(lv_event_t * e)
 {

@@ -253,9 +253,55 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	
 }
 
+void CompButton::Update()
+{
+	if (_Periph->GetValue() == 1.0)
+	{
+		SetButtonState(true);
+
+		if (_Periph->GetBrotherId() != -1)   
+		{
+			PeriphClass *Brother = FindPeriphById(_Periph->GetBrotherId());
+			if (Brother)
+			{
+				char buf[10];
+				int nk = 0;
+				float value = Brother->GetValue();
+				
+				if      (value<10)  nk = 2;
+				else if (value<100) nk = 1;
+				else                nk = 0;
+	
+				if (value == -99) strcpy(buf, "--"); 
+				else dtostrf(value, 0, nk, buf);
+	
+				strcat(buf, " A");
+	
+				SetAmp(buf);
+				ShowAmp();
+			}
+			else 
+			{ 
+				HideAmp(); 
+			}
+		else 
+		{ 
+			HideAmp(); 
+		}
+	}	
+	else
+	{
+		SetButtonState(false);		
+		HideAmp();
+	}
+
+	_Periph->GetChanged() ? SpinnerOn() : SpinnerOff;
+}
+
 CompSensor::CompSensor()
 {
     _ClassType = 2;
+    _ShowLabels = true;
 }
 CompSensor::~CompSensor()
 {
@@ -376,6 +422,48 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_style_pad_bottom(_Arc, 0, LV_PART_KNOB | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
+}
+void CompSensor::Update()
+{	
+	float value = _Periph->GetValue();
+	if      (value<10)  nk = 2;
+	else if (value<100) nk = 1;
+	else                nk = 0;
+
+	if (value == -99) strcpy(ValueBuf, "--"); 
+	else dtostrf(value, 0, nk, ValueBuf);
+
+	switch (_Periph->GetType()) 
+	{
+		case SENS_TYPE_AMP:
+			strcat(ValueBuf, " A");
+			
+			if 		(value < 20) bg = lv_color_hex(0x135A25);
+			else if (value < 25) bg = lv_color_hex(0x7C7E26);
+			else 				 bg = lv_color_hex(0x88182C);
+
+			lv_obj_set_style_bg_color(_Button, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+			SetValue(ValueBuf);
+
+			lv_arc_set_range(_Arc, 0, 400);
+			lv_arc_set_value((_Arc, value*10);
+			
+			break;
+		case SENS_TYPE_VOLT:
+			strcat(ValueBuf, " V");
+			
+			if 		(value < 13)   bg = lv_color_hex(0x135A25);
+			else if (value < 14.4) bg = lv_color_hex(0x7C7E26);
+			else 				   bg = lv_color_hex(0x88182C);
+
+			lv_obj_set_style_bg_color(_Button, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+			SetValue(ValueBuf);
+
+			lv_arc_set_range(_Arc, 90, 150);
+			lv_arc_set_value(_Arc, value*10);
+
+			break;
+	}
 }
 
 CompMeter::CompMeter()
@@ -658,6 +746,7 @@ void CompMeter::Update()
 
 	SetNeedle(value*10);
 	SetValue(buf);
+}
 
 static void SingleMeter_cb(lv_event_t * e) {
 

@@ -24,6 +24,7 @@ class CompThing {
 	    int _Height;
         int _Id;
         int _Pos;
+	int _Size;
 
         lv_obj_t *_Button;
         lv_obj_t *_LblPeer;

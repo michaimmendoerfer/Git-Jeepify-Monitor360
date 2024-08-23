@@ -59,14 +59,15 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     _event_cb = event_cb;
     _ShowLabels = ShowLabels;
     _Pos = Pos;
+    _Size = size;
    
     _x = x;
     _y = y;			
 	
-    switch (size) 
+    switch (_Size) 
     {
 	case 1: _Width  = COMPBUTTON_WIDTH_1; _Height = COMPBUTOON_HEIGHT_1; break;
-    	case2 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
+    	case 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
     }
 	
     _Spinner = lv_spinner_create(comp_parent, 1000, 90);
@@ -89,7 +90,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_style_arc_width(_Spinner, 5, LV_PART_INDICATOR | LV_STATE_CHECKED);
 	
     _Button = lv_imgbtn_create(comp_parent);
-    if (size == 1)
+    if (_Size == 1)
     {
         lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_1640860301, NULL);
         lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_743505413, NULL);
@@ -129,7 +130,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	lv_obj_set_width (_LblPeer, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(_LblPeer, LV_SIZE_CONTENT);    /// 1
     	
-	if (size == 1)
+	if (_Size == 1)
 	{
 	    lv_obj_set_align(_LblPeer, LV_ALIGN_BOTTOM_RIGHT);
 	    lv_obj_set_x(_LblPeer, -50);
@@ -162,7 +163,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     if (!_Periph->GetName()) lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
     else lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
 	
-	if (size == 1)
+	if (_size == 1)
 	{
 		lv_obj_set_align(_LblPeriph, LV_ALIGN_BOTTOM_RIGHT);
 		lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_OFF);
@@ -195,7 +196,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     if (!_ShowLabels) lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
 
     _LblValue = lv_label_create(_Button);
-    if (size == 1)
+    if (_Size == 1)
 	{
 		lv_obj_set_width(_LblValue, LV_SIZE_CONTENT);
     	lv_obj_set_height(_LblValue, LV_SIZE_CONTENT);    /// 1
@@ -259,6 +260,12 @@ void CompButton::Update()
 	if (_Periph->GetValue() == 1.0)
 	{
 		SetButtonState(true);
+		
+		switch (_Size) {
+			case 1: lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_ON); lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_1_ON); break;
+				
+			case 2: lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_2_ON); lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_2_ON); break;
+		}
 
 		if (_Periph->GetBrotherId() != -1)   
 		{

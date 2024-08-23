@@ -363,18 +363,25 @@ void Ui_Single_Leave(lv_event_t * e)
 	SingleIndicNeedle = NULL;
 }
 
-static void SingleMeter_cb(lv_event_t * e) {
+void Ui_Single_Clicked(lv_event_t * e)
+{
+	lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
 
-	lv_obj_draw_part_dsc_t	*dsc  = (lv_obj_draw_part_dsc_t *)lv_event_get_param(e);
-	double					value;
-
-	if( dsc->text != NULL ) {		// Filter major ticks...
-		value = dsc->value / 10;
-		snprintf(dsc->text, sizeof(dsc->text), "%5.1f", value);
+    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Single_Next(e);
+    }
+    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Single_Last(e);
 	}
-
+	else if (event_code == LV_EVENT_CLICKED) {
+		Ui_Single_Next(e);
+    }	
+	else if (event_code == LV_EVENT_LONG_PRESSED) {
+    }
 }
-
 #pragma endregion Screen_SingleMeter
 #pragma region Screen_MultiMeter
 void Ui_Multi_Loaded(lv_event_t * e)

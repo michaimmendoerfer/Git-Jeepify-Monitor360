@@ -257,22 +257,14 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 
 void CompButton::Update()
 {
+	char buf[10];
 	if (_Periph->GetValue() == 1.0)
 	{
-		SetButtonState(true);
-		
-		switch (_Size) {
-			case 1: lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_ON); lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_1_ON); break;
-				
-			case 2: lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_2_ON); lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_2_ON); break;
-		}
-
 		if (_Periph->GetBrotherId() != -1)   
 		{
 			PeriphClass *Brother = FindPeriphById(_Periph->GetBrotherId());
 			if (Brother)
 			{
-				char buf[10];
 				int nk = 0;
 				float value = Brother->GetValue();
 				
@@ -284,18 +276,40 @@ void CompButton::Update()
 				else dtostrf(value, 0, nk, buf);
 	
 				strcat(buf, " A");
-	
-				SetAmp(buf);
-				ShowAmp();
 			}
-			else 
-			{ 
-				HideAmp(); 
+			else
+			{
+				strcpy(buf, "");
 			}
 		else 
 		{ 
-			HideAmp(); 
+			strcpy(buf, "");
 		}
+		
+		SetButtonState(true);	
+		
+		if ((_MobileLabels) and (_Size == 1)) 
+		{
+			lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_ON); 
+			lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_1_ON); 
+			HideAmp();
+			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf");
+		}
+				
+		if ((_MobileLabels) and (_Size == 2)) 
+		{
+			lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_2_ON); 
+			lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_2_ON); 
+			HideAmp();
+			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf");
+			
+		}		}	
+		else
+		{
+			
+		
+			
+		
 	}	
 	else
 	{

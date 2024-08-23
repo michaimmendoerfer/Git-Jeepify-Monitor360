@@ -33,6 +33,7 @@
  
 CompThing::CompThing()
 {
+    _ShowLabels = false;
 }
 CompButton::CompButton()
 {

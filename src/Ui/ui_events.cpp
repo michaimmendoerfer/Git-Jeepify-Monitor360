@@ -69,6 +69,7 @@ void Ui_Peer_Prepare()
 			case SWITCH_4_WAY:	 lv_img_set_src(ui_ImgPeerType, &ui_img_ansgarmodule_4_png); break;
 			case MONITOR_ROUND:	 lv_img_set_src(ui_ImgPeerType, &ui_img_rolfmodule_round_png); break;
 			case MONITOR_BIG:	 lv_img_set_src(ui_ImgPeerType, &ui_img_friedermodule_disp_png); break;
+			case MONITOR_360:	 lv_img_set_src(ui_ImgPeerType, &ui_img_friedermodule_disp_png); break;
 			case BATTERY_SENSOR: lv_img_set_src(ui_ImgPeerType, &ui_img_friedermodule_disp_png); break;
 		}	
 

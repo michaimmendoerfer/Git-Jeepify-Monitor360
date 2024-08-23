@@ -38,6 +38,7 @@ CompThing::CompThing()
 CompButton::CompButton()
 {
     _ClassType = 1;
+	_MobileLabels = false;
 }
 CompButton::~CompButton()
 {

@@ -164,15 +164,15 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	if (size == 1)
 	{
 		lv_obj_set_align(_LblPeriph, LV_ALIGN_BOTTOM_RIGHT);
-		lv_obj_set_x(_LblPeriph, -50);
-    	lv_obj_set_y(_LblPeriph, -90);
+		lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_OFF);
+    	lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_1_OFF);
 		lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
 	else
 	{
 		lv_obj_set_align(_LblPeriph, LV_ALIGN_CENTER);
-		lv_obj_set_x(_LblPeriph, 0);
-    	lv_obj_set_y(_LblPeriph, -145);
+		lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_2_OFF);
+    	lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_2_OFF);
 		lv_obj_set_style_text_font(_LblPeriph, &lv_font_montserrat_20, LV_PART_MAIN | LV_STATE_DEFAULT);
 	}
 

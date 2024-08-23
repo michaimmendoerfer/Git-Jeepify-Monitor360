@@ -8,10 +8,18 @@
 #include "CompButton.h"
 
 //#define DEBUG 1
-#define COMPBUTTON_WIDTH_1	70
-#define COMPBUTOON_HEIGHT_1	120
-#define COMPBUTTON_WIDTH_2	120
-#define COMPBUTOON_HEIGHT_2	205
+#define COMPBUTTON_WIDTH_1		  70
+#define COMPBUTOON_HEIGHT_1		 120
+#define COMPBUTTON_WIDTH_2		 120
+#define COMPBUTOON_HEIGHT_2		 205
+#define COMPBUTTON_X_PERIPH_1_ON	 -50
+#define COMPBUTTON_Y_PERIPH_1_ON	 -90
+#define COMPBUTTON_X_PERIPH_1_OFF	 -50
+#define COMPBUTTON_Y_PERIPH_1_OFF	  90
+#define COMPBUTTON_X_PERIPH_2_ON	   0
+#define COMPBUTTON_Y_PERIPH_2_ON	-145
+#define COMPBUTTON_X_PERIPH_2_OFF	   0
+#define COMPBUTTON_Y_PERIPH_2_OFF	 145
 
 #define COMPSENSOR_WIDTH_1	100
 #define COMPSENSOR_HEUGHT_1	100
@@ -56,7 +64,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     switch (size) 
     {
 	case 1: _Width  = COMPBUTTON_WIDTH_1; _Height = COMPBUTOON_HEIGHT_1; break;
-    	cas2 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
+    	case2 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
     }
 	
     _Spinner = lv_spinner_create(comp_parent, 1000, 90);

@@ -342,7 +342,7 @@ void SingleUpdateTimer(lv_timer_t * timer)
 	
 	if (ActivePeriphSingle)
 	{
-		((CompMeter *)CompThingArray[Pos])->Update();
+		CompThingArray[Pos]->Update();
 		
 		//lv_meter_set_indicator_value(SingleMeter, SingleIndicNeedle, value*10);
 		//lv_label_set_text(ui_LblSingleValue, buf);
@@ -358,7 +358,7 @@ void Ui_Single_Leave(lv_event_t * e)
 
 	Serial.println("SingleTimer deleted");
     
-	delete ((CompMeter *) CompThingArray[Pos]);
+	delete CompThingArray[Pos];
 }
 
 void Ui_Single_Clicked(lv_event_t * e)
@@ -566,20 +566,8 @@ void Ui_Multi_Unload(lv_event_t * e)
 		if (CompThingArray[Pos])
 		{
 			//Serial.printf("CompThing[%d] (%s) hat Class %d\n\r", Pos, CompThingArray[Pos]->GetPeriph()->GetName(), CompThingArray[Pos]->GetClassType());
-			if (CompThingArray[Pos]->GetClassType() == 1) // ButtonClass
-			{
-				//Serial.println("will Buttonclass löschen");
-				delete ((CompButton *) CompThingArray[Pos]);
-				CompThingArray[Pos] = NULL;
-				//Serial.println("Buttonclass gelöscht");
-
-			}
-			else if (CompThingArray[Pos]->GetClassType() == 2) // SensorClass
-			{
-				//Serial.println("will Sensorclass löschen");
-				delete ((CompSensor *) CompThingArray[Pos]);
-				CompThingArray[Pos] = NULL;
-			}
+			delete CompThingArray[Pos];
+			CompThingArray[Pos] = NULL;
 		}
 	}
 }

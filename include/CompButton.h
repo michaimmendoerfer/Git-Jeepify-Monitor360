@@ -24,7 +24,7 @@ class CompThing {
 	    int _Height;
         int _Id;
         int _Pos;
-	int _Size;
+	    int _Size;
 
         lv_obj_t *_Button;
         lv_obj_t *_LblPeer;
@@ -63,6 +63,8 @@ class CompThing {
 
         int  GetPos() { return _Pos; }
         int  GetClassType() { return _ClassType; }
+
+        virtual void Update();
 };
 
 class CompButton : public CompThing {
@@ -84,11 +86,13 @@ class CompButton : public CompThing {
 		void ShowAmp() { ShowValue(); }		
         void HideAmp() { HideValue(); }	
 
-	bool GetMobileLabels() { return _MobileLabels; }
-	void SetMobileLabels(bool MobileLabels) { _MobileLabels = MobileLabels; }
+	    bool GetMobileLabels() { return _MobileLabels; }
+	    void SetMobileLabels(bool MobileLabels) { _MobileLabels = MobileLabels; }
 
         void Hide() { lv_obj_add_flag  (_Button, LV_OBJ_FLAG_HIDDEN); SpinnerOff(); }
         void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
+
+        void Update();
         
 
 	//void Follow(float *Value);
@@ -109,29 +113,32 @@ class CompSensor : public CompThing {
         void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
 
         lv_obj_t *GetArc() { return _Arc; }
-	//void Follow(float *Value);
+
+
+        void Update();
+    	//void Follow(float *Value);
 };
 
 class CompMeter : public CompThing {
     private:
-	lv_obj_t *_Meter;
-	lv_meter_indicator_t * _Indic;
-	lv_meter_indicator_t * _IndicNeedle;
-	lv_meter_scale_t * _Scale;
+        lv_obj_t *_Meter;
+        lv_meter_indicator_t * _Indic;
+        lv_meter_indicator_t * _IndicNeedle;
+        lv_meter_scale_t * _Scale;
 
     public:
-	CompMeter();
+        CompMeter();
         ~CompMeter();
 
         void SetupModern (lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
         void SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
 
-	void Update();
+        void SetNeedle(float value) { lv_meter_set_indicator_value(_Meter, _IndicNeedle, value); }
 
-	void SetNeedle(float value) { lv_meter_set_indicator_value(_Meter, _IndicNeedle, value); }
-
-	void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
+        void Hide() { lv_obj_add_flag  (_Meter, LV_OBJ_FLAG_HIDDEN); }
         void Show() { lv_obj_clear_flag(_Meter, LV_OBJ_FLAG_HIDDEN); }
+
+        void Update();
 };
 
 #endif

@@ -22,7 +22,7 @@
 #define COMPBUTTON_Y_PERIPH_2_OFF	 145
 
 #define COMPSENSOR_WIDTH_1	100
-#define COMPSENSOR_HEUGHT_1	100
+#define COMPSENSOR_HEIGHT_1	100
 
 #define COMPMETER_WIDTH_1	100
 #define COMPMETER_HEIGHT_1	100
@@ -31,6 +31,8 @@
 #define COMPMETER_WIDTH_3	360
 #define COMPMETER_HEIGHT_3	360
  
+void SingleMeter_cb(lv_event_t *e);
+
 CompThing::CompThing()
 {
     _ShowLabels = false;
@@ -163,7 +165,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     if (!_Periph->GetName()) lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
     else lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
 	
-	if (_size == 1)
+	if (_Size == 1)
 	{
 		lv_obj_set_align(_LblPeriph, LV_ALIGN_BOTTOM_RIGHT);
 		lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_OFF);
@@ -260,13 +262,10 @@ void CompButton::Update()
 	char buf[10];
 	if (_Periph->GetValue() == 1.0)
 	{
-		if (_Periph->GetBrotherId() != -1)   
+		if (_Periph->GetBrotherPos() != -1)   
 		{
-			PeriphClass *Brother = FindPeriphById(_Periph->GetBrotherId());
-			if (Brother)
-			{
 				int nk = 0;
-				float value = Brother->GetValue();
+				float value = GetBrotherValueOf(_Periph);
 				
 				if      (value<10)  nk = 2;
 				else if (value<100) nk = 1;
@@ -276,10 +275,6 @@ void CompButton::Update()
 				else dtostrf(value, 0, nk, buf);
 	
 				strcat(buf, " A");
-			}
-			else
-			{
-				strcpy(buf, "");
 			}
 		else 
 		{ 
@@ -293,7 +288,7 @@ void CompButton::Update()
 			lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_1_ON); 
 			lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_1_ON); 
 			HideAmp();
-			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf");
+			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf);
 		}
 				
 		if ((_MobileLabels) and (_Size == 2)) 
@@ -301,14 +296,8 @@ void CompButton::Update()
 			lv_obj_set_x(_LblPeriph, COMPBUTTON_X_PERIPH_2_ON); 
 			lv_obj_set_y(_LblPeriph, COMPBUTTON_Y_PERIPH_2_ON); 
 			HideAmp();
-			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf");
-			
-		}		}	
-		else
-		{
-			
-		
-			
+			lv_label_set_text_fmt(_LblPeriph, "%.6s %s", _Periph->GetName(), buf);
+		}		
 		
 	}	
 	else
@@ -317,7 +306,8 @@ void CompButton::Update()
 		HideAmp();
 	}
 
-	_Periph->GetChanged() ? SpinnerOn() : SpinnerOff;
+	if (_Periph->GetChanged()) SpinnerOn(); 
+    else SpinnerOff();
 }
 
 CompSensor::CompSensor()
@@ -369,7 +359,7 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 
     
     _LblPeer = lv_label_create(_Button);
-    if (!PeerOf(Periph)->GetName()) 
+    if (!PeerOf(_Periph)->GetName()) 
 	{
 	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -447,7 +437,11 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 }
 void CompSensor::Update()
 {	
-	float value = _Periph->GetValue();
+	int nk = 0;
+    lv_color_t bg;
+    char ValueBuf[10];
+    
+    float value = _Periph->GetValue();
 	if      (value<10)  nk = 2;
 	else if (value<100) nk = 1;
 	else                nk = 0;
@@ -468,7 +462,7 @@ void CompSensor::Update()
 			SetValue(ValueBuf);
 
 			lv_arc_set_range(_Arc, 0, 400);
-			lv_arc_set_value((_Arc, value*10);
+			lv_arc_set_value(_Arc, value*10);
 			
 			break;
 		case SENS_TYPE_VOLT:
@@ -488,9 +482,6 @@ void CompSensor::Update()
 	}
 }
 
-CompMeter::CompMeter()
-{
-}
 CompMeter::CompMeter()
 {
     _ClassType = 3;
@@ -513,19 +504,22 @@ void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int s
     _event_cb = event_cb;
     _ShowLabels = ShowLabels;
     _Pos = Pos;
+    _Size = size;
    
     _x = x;
     _y = y;		
 
-    switch (size) {
-	case 1: _Width  = COMPMETER_WIDTH_1; _Height = COMPMETER_HEIGHT_1; break
-	case 2: _Width  = COMPMETER_WIDTH_2; _Height = COMPMETER_HEIGHT_2; break
-	case 3: _Width  = COMPMETER_WIDTH_3; _Height = COMPMETER_HEIGHT_3; break
-		}	
-	if (Meter)
+    switch (size) 
+    {
+        case 1: _Width  = COMPMETER_WIDTH_1; _Height = COMPMETER_HEIGHT_1; break;
+        case 2: _Width  = COMPMETER_WIDTH_2; _Height = COMPMETER_HEIGHT_2; break;
+        case 3: _Width  = COMPMETER_WIDTH_3; _Height = COMPMETER_HEIGHT_3; break;
+	}
+
+	if (_Meter)
 	{
-		lv_obj_del(Meter);
-		Meter = NULL;
+		lv_obj_del(_Meter);
+		_Meter = NULL;
 	}
 		
 	_Meter = lv_meter_create(comp_parent);
@@ -633,19 +627,20 @@ void CompMeter::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int 
     _event_cb = event_cb;
     _ShowLabels = ShowLabels;
     _Pos = Pos;
+    _Size = size;
    
     _x = x;
     _y = y;		
 
     switch (size) {
-	case 1: _Width  = 100; _Height = 100; break
-	case 2: _Width  = 240; _Height = 240; break
-	case 3: _Width  = 360; _Height = 360; break
+	case 1: _Width  = 100; _Height = 100; break;
+	case 2: _Width  = 240; _Height = 240; break;
+	case 3: _Width  = 360; _Height = 360; break;
     }	
-	if (Meter)
+	if (_Meter)
 	{
-		lv_obj_del(Meter);
-		Meter = NULL;
+		lv_obj_del(_Meter);
+		_Meter = NULL;
 	}
 		
 	_Meter = lv_meter_create(comp_parent);
@@ -770,8 +765,8 @@ void CompMeter::Update()
 	SetValue(buf);
 }
 
-static void SingleMeter_cb(lv_event_t * e) {
-
+void SingleMeter_cb(lv_event_t *e)
+{
 	lv_obj_draw_part_dsc_t	*dsc  = (lv_obj_draw_part_dsc_t *)lv_event_get_param(e);
 	double					value;
 

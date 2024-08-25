@@ -134,10 +134,10 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         int Brother = (int) doc[Buf];
                         int BrotherId = P->GetPeriphPtr(Brother)->GetId();
 
-                        if (P->GetPeriphBrotherId(Si) != BrotherId)              
+                        if (P->GetPeriphBrotherPos(Si) != BrotherId)              
                         {
-                            P->SetPeriphBrotherId(Si, BrotherId);
-                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherId is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherId(Si), FindPeriphById(BrotherId)->GetName());
+                            P->SetPeriphBrotherPos(Si, BrotherId);
+                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherId is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), FindPeriphById(BrotherId)->GetName());
                         }
                      }
                 }

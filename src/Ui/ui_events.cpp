@@ -55,6 +55,8 @@ void SettingsUpdateTimer(lv_timer_t * timer);
 
 void Ui_Multi_Button_Clicked(lv_event_t * e);
 void Ui_Multi_Sensor_Clicked(lv_event_t * e);
+void Ui_Single_Clicked(lv_event_t * e);
+
 #pragma endregion Global_Definitions
 
 #pragma region Screen_Peer
@@ -302,7 +304,7 @@ void Ui_Single_Prepare(lv_event_t * e)
 	{
 		Serial.println("ActivePeriphSingle true");
 
-		Serial.printf("Name %s at Pos %d has Type %d\n\r", Periph->GetName(), Pos, Periph->GetType());
+		Serial.printf("Name %s at Pos %d has Type %d\n\r", ActivePeriphSingle->GetName(), Pos, ActivePeriphSingle->GetType());
 	
 		if (CompThingArray[Pos]) 
 		{
@@ -312,7 +314,7 @@ void Ui_Single_Prepare(lv_event_t * e)
 
 		CompThingArray[Pos] = new CompMeter;
 		Serial.println("nach new Meter");
-		((CompMeter *) CompThingArray[Pos])->SetupModern(ui_ScrSingle, x, y, Pos, 1, true, ActivePeriphSingle, Ui_Single_Clicked);
+		((CompMeter *) CompThingArray[Pos])->SetupModern(ui_ScrSingle, 0, 0, 0, 1, true, ActivePeriphSingle, Ui_Single_Clicked);
 		Serial.println("nach setup");
 	}
 		
@@ -326,7 +328,6 @@ void Ui_Single_Prepare(lv_event_t * e)
 	{
 		SingleTimer = lv_timer_create(SingleUpdateTimer, 500,  &user_data);
 		Serial.println("SingleTimer created");
-	}
 	}
 }
 
@@ -350,17 +351,14 @@ void SingleUpdateTimer(lv_timer_t * timer)
 
 void Ui_Single_Leave(lv_event_t * e)
 {
+	int Pos = 0;
+
 	lv_timer_del(SingleTimer);
 	SingleTimer = NULL;
 
 	Serial.println("SingleTimer deleted");
     
-	lv_obj_del(SingleMeter);
-	
-	
-	SingleMeter       = NULL;
-	scale             = NULL;
-	SingleIndicNeedle = NULL;
+	delete ((CompMeter *) CompThingArray[Pos]);
 }
 
 void Ui_Single_Clicked(lv_event_t * e)
@@ -610,7 +608,7 @@ void Ui_Multi_Prev(lv_event_t * e)
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
 	int Pos = 0;	
-	CompThingArray[Pos]->Update();
+	((CompButton *) CompThingArray[Pos])->Update();
 }
 void Ui_Switch_Next(lv_event_t * e)
 {

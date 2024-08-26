@@ -312,10 +312,14 @@ void Ui_Single_Prepare(lv_event_t * e)
 			CompThingArray[Pos] = NULL;
 		}
 
-		CompThingArray[Pos] = new CompMeter;
+		CompMeter *Meter = new CompMeter;
+
 		Serial.println("nach new Meter");
-		((CompMeter *) CompThingArray[Pos])->SetupModern(ui_ScrSingle, 0, 0, 0, 1, true, ActivePeriphSingle, Ui_Single_Clicked);
+		Meter->SetStyle(1);
+		Meter->Setup(ui_ScrSingle, 0, 0, 0, 1, true, ActivePeriphSingle, Ui_Single_Clicked);
 		Serial.println("nach setup");
+		
+		CompThingArray[Pos] = Meter;
 	}
 		
 	static uint32_t user_data = 10;

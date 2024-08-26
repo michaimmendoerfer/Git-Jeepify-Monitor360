@@ -68,7 +68,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 	
     switch (_Size) 
     {
-	case 1: _Width  = COMPBUTTON_WIDTH_1; _Height = COMPBUTOON_HEIGHT_1; break;
+	    case 1: _Width  = COMPBUTTON_WIDTH_1; _Height = COMPBUTOON_HEIGHT_1; break;
     	case 2: _Width  = COMPBUTTON_WIDTH_2; _Height = COMPBUTOON_HEIGHT_2; break;
     }
 	
@@ -327,6 +327,7 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     _event_cb = event_cb;
     _ShowLabels = ShowLabels;
     _Pos = Pos;
+    _Size = size;
    
     _x = x;
     _y = y;		
@@ -485,6 +486,7 @@ void CompSensor::Update()
 CompMeter::CompMeter()
 {
     _ClassType = 3;
+    _Style = 1;
 }
 CompMeter::~CompMeter()
 {
@@ -498,7 +500,7 @@ CompMeter::~CompMeter()
     Serial.println("Meter weg");
 }
 
-void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+void CompMeter::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
     _Periph = Periph;
     _event_cb = event_cb;
@@ -521,8 +523,15 @@ void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int s
 		lv_obj_del(_Meter);
 		_Meter = NULL;
 	}
-		
-	_Meter = lv_meter_create(comp_parent);
+   
+    _Meter = lv_meter_create(comp_parent);
+	
+    if (_Style == 1) SetupModern();
+    else if (_Style == 2) SetupVintage();
+}
+
+void CompMeter::SetupModern()
+{
 	lv_obj_center(_Meter);
 	lv_obj_set_style_bg_color(_Meter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 	lv_obj_set_style_bg_opa(_Meter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -619,32 +628,11 @@ void CompMeter::SetupModern(lv_obj_t * comp_parent, int x, int y, int Pos, int s
     lv_obj_set_style_text_color(_LblValue, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(_LblValue, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(_LblValue, &lv_font_montserrat_24, LV_PART_MAIN | LV_STATE_DEFAULT);
-    }
+}
 
-void CompMeter::SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb)
+void CompMeter::SetupVintage()
 {
-    _Periph = Periph;
-    _event_cb = event_cb;
-    _ShowLabels = ShowLabels;
-    _Pos = Pos;
-    _Size = size;
-   
-    _x = x;
-    _y = y;		
-
-    switch (size) {
-	case 1: _Width  = 100; _Height = 100; break;
-	case 2: _Width  = 240; _Height = 240; break;
-	case 3: _Width  = 360; _Height = 360; break;
-    }	
-	if (_Meter)
-	{
-		lv_obj_del(_Meter);
-		_Meter = NULL;
-	}
-		
-	_Meter = lv_meter_create(comp_parent);
-	lv_obj_center(_Meter);
+    lv_obj_center(_Meter);
 	lv_obj_set_style_bg_color(_Meter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
 	lv_obj_set_style_bg_opa(_Meter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 	lv_obj_set_size(_Meter, 235,	235);

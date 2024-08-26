@@ -35,7 +35,7 @@ class CompThing {
 
         PeriphClass *_Periph;
 	
-	float *_ValueToFollow;
+	    float *_ValueToFollow;
         bool _ShowLabels;
 
         lv_event_cb_t _event_cb;
@@ -45,10 +45,9 @@ class CompThing {
         PeriphClass *GetPeriph() { return _Periph; }
 
         lv_obj_t* GetButton() { return _Button; }
-        bool GetButtonState()   	{ if (lv_obj_has_state(_Button, LV_STATE_CHECKED)) return true; else return false; }
+        bool GetButtonState()   	    { if (lv_obj_has_state(_Button, LV_STATE_CHECKED)) return true; else return false; }
         void SetButtonState(bool State) { if (State) lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED); 
                                                 else lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED); }
-        
         void SetPeer(char *Buf) { lv_label_set_text(_LblPeer, Buf); }
 		void ShowPeer() { lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN); };			
         void HidePeer() { lv_obj_add_flag  (_LblPeer, LV_OBJ_FLAG_HIDDEN); };	
@@ -65,6 +64,7 @@ class CompThing {
         int  GetClassType() { return _ClassType; }
 
         virtual void Update();
+        virtual void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
 };
 
 class CompButton : public CompThing {
@@ -125,13 +125,16 @@ class CompMeter : public CompThing {
         lv_meter_indicator_t * _Indic;
         lv_meter_indicator_t * _IndicNeedle;
         lv_meter_scale_t * _Scale;
+        int _Style; // 1=Modern, 2=Vintage
 
     public:
         CompMeter();
         ~CompMeter();
 
-        void SetupModern (lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
-        void SetupVintage(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        void SetStyle(int Style) { _Style = Style; }
+        void SetupModern ();
+        void SetupVintage();
 
         void SetNeedle(float value) { lv_meter_set_indicator_value(_Meter, _IndicNeedle, value); }
 

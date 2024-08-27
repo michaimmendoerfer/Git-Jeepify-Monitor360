@@ -47,6 +47,10 @@ volatile uint32_t TSMsgEich = 0;
 volatile uint32_t TSMsgPair = 0;
 volatile uint32_t TSPair    = 0;
 
+String T[MAX_PERIPHERALS];
+String N[MAX_PERIPHERALS];
+String B[MAX_PERIPHERALS];
+
 lv_timer_t *WDButtonVars;
 
 int ActiveMultiScreen;
@@ -137,6 +141,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         if (P->GetPeriphBrotherPos(Si) != BrotherId)              
                         {
                             P->SetPeriphBrotherPos(Si, BrotherId);
+                            SaveNeeded = true;
                             if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherId is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), FindPeriphById(BrotherId)->GetName());
                         }
                      }
@@ -144,21 +149,6 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 SendPairingConfirm(P); 
             }
 
-            
-            /*// "Order"="UpdateName"; "Pos"="32; "NewName"="Horst"; Pos 99 is moduleName
-            else if (Order == SEND_CMD_UPDATE_NAME)// vieleicht bald weg
-            {
-                int Pos = (int) doc["Pos"];
-                String NewName = doc["NewName"];
-
-                if (NewName != "") 
-                {
-                    if (Pos == 99) P->SetName(NewName.c_str());
-                    else           P->SetPeriphName(Pos, NewName.c_str());
-                }
-
-                SavePeers();
-            }*/
             else // Peer known - no status, no pairing so read new values
             {
                 for (int i=0; i<MAX_PERIPHERALS; i++) 
@@ -245,6 +235,7 @@ void setup()
     static uint32_t user_data = 10;
     lv_timer_t * TimerPing = lv_timer_create(SendPing, PING_INTERVAL,  &user_data);
 
+    
     ui_init(); 
     Serial.println("Setup ende...");
 }

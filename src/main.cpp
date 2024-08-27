@@ -47,10 +47,6 @@ volatile uint32_t TSMsgEich = 0;
 volatile uint32_t TSMsgPair = 0;
 volatile uint32_t TSPair    = 0;
 
-String T[MAX_PERIPHERALS];
-String N[MAX_PERIPHERALS];
-String B[MAX_PERIPHERALS];
-
 lv_timer_t *WDButtonVars;
 
 int ActiveMultiScreen;
@@ -66,7 +62,12 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
     JsonDocument doc; 
     String jsondata = String(buff); 
     
-    String BufS; char Buf[50] = {};
+    //String BufS; 
+    //char Buf[50] = {};
+    char Tx[10] = {};
+    char Nx[10] = {};
+    char Bx[10] = {};
+    
     bool SaveNeeded = false;
     bool NewPeer    = false;
     
@@ -111,16 +112,16 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
-                    snprintf(Buf, sizeof(Buf), "T%d", Si);                          // Check for T0 (Type of Periph 0)
-                    if (Self.GetDebugMode()) Serial.printf("Check Pairing for: %s", Buf);
+                    snprintf(Tx, sizeof(Tx), "T%d", Si);                          // Check for T0 (Type of Periph 0)
+                    if (Self.GetDebugMode()) Serial.printf("Check Pairing for: %s", Tx);
                     
-                    if (doc.containsKey(Buf)) 
+                    if (doc.containsKey(Tx)) 
                     {
-                        if (Self.GetDebugMode()) Serial.printf("Pairing found: %s", Buf);       
-                        int  Type = doc[Buf];                                       // Set Periph[0].Type
+                        if (Self.GetDebugMode()) Serial.printf("Pairing found: %s", Tx);       
+                        int  Type = doc[Tx];                                       // Set Periph[0].Type
 
-                        snprintf(Buf, sizeof(Buf), "N%d", Si);                      // get N0 (Name of Periph 0)
-                        String PName = doc[Buf];
+                        snprintf(Nx, sizeof(Nx), "N%d", Si);                      // get N0 (Name of Periph 0)
+                        String PName = doc[Nx];
 
                         if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (Type != P->GetPeriphType(Si)))
                         {
@@ -132,17 +133,17 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     } 
                 }
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
-                    snprintf(Buf, sizeof(Buf), "B%d", Si);                      // get B0 (Brother of Periph 0)
-                    if (doc.containsKey(Buf)) 
+                    snprintf(Bx, sizeof(Bx), "B%d", Si);                      // get B0-Pos (Brother of Periph 0)
+                    if (doc.containsKey(Bx)) 
                     {
-                        int Brother = (int) doc[Buf];
-                        int BrotherId = P->GetPeriphPtr(Brother)->GetId();
+                        int Brother = (int) doc[Bx];
+                        //int BrotherId = P->GetPeriphPtr(Brother)->GetId();
 
-                        if (P->GetPeriphBrotherPos(Si) != BrotherId)              
+                        if (P->GetPeriphBrotherPos(Si) != Brother)              
                         {
-                            P->SetPeriphBrotherPos(Si, BrotherId);
+                            P->SetPeriphBrotherPos(Si, Brother);
                             SaveNeeded = true;
-                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherId is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), FindPeriphById(BrotherId)->GetName());
+                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherPos is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), P->GetPeriphName(Brother));
                         }
                      }
                 }

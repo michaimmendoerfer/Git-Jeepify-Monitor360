@@ -55,6 +55,13 @@ class CompThing {
         void ShowValue() { lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN); };			
         void HideValue() { lv_obj_add_flag  (_LblValue, LV_OBJ_FLAG_HIDDEN); };	
 
+        void Hide() { lv_obj_add_flag  (_LblPeer,   LV_OBJ_FLAG_HIDDEN);
+                      lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); 
+                      lv_obj_add_flag  (_LblValue,  LV_OBJ_FLAG_HIDDEN); 
+                      lv_obj_add_flag  (_Button,    LV_OBJ_FLAG_HIDDEN); }
+                      
+        void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
+
         int  GetPos() { return _Pos; }
         int  GetClassType() { return _ClassType; }
 };
@@ -78,11 +85,7 @@ class CompButton : public CompThing {
 
         void SetAmp(char *Buf) { SetValue(Buf); }
 		void ShowAmp() { ShowValue(); }		
-        void HideAmp() { HideValue(); }	
-
-        void Hide() { lv_obj_add_flag  (_Button, LV_OBJ_FLAG_HIDDEN); SpinnerOff(); }
-        void Show() { lv_obj_clear_flag(_Button, LV_OBJ_FLAG_HIDDEN); }
-        
+        void HideAmp() { HideValue(); }	        
 
 	//void Follow(float *Value);
 };

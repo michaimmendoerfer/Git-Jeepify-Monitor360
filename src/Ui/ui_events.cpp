@@ -627,9 +627,13 @@ void Ui_Switch_Clicked(lv_event_t * e)
         Ui_Switch_Prev(e);
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
+<<<<<<< HEAD
 		int PeriphId = atoi(lv_label_get_text(lv_obj_get_child(target, 0)));
 		Serial.printf("geklickte PeriphId = %d\n\r", PeriphId);
 		PeriphClass *Periph = FindPeriphById(PeriphId);
+=======
+		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 0))));
+>>>>>>> eb467c36335180cda9dfe29b7f10a62779f56cf5
 
 		Periph->SetChanged(true);
 		Serial.printf("Button %s-State in event is %d\n\r", Periph->GetName(), lv_obj_get_state(target));

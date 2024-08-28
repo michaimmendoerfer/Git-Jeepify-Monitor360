@@ -32,10 +32,26 @@ class CompThing {
 
         PeriphClass *_Periph;
 
+        bool _PeerVisible;
+        bool _PeriphVisible;
+        bool _ValueVisible;
+        bool _SystemVisible;
+        bool _PeriphValueCombo;
+
+        int _X_Peer;
+        int _Y_Peer;
+        int _X_Periph;
+        int _Y_Periph;
+        int _X_Value;
+        int _Y_Value;
+
         lv_event_cb_t _event_cb;
 
     public:
         CompThing();
+        virtual ~CompThing();
+        virtual void Update();
+
         PeriphClass *GetPeriph() { return _Periph; }
 
         lv_obj_t* GetButton() { return _Button; }
@@ -44,16 +60,19 @@ class CompThing {
                                                 else lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED); }
         
         void SetPeer(char *Buf) { lv_label_set_text(_LblPeer, Buf); }
-		void ShowPeer() { lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN); };			
-        void HidePeer() { lv_obj_add_flag  (_LblPeer, LV_OBJ_FLAG_HIDDEN); };	
+        void SetPeerPos(int x, int y) { _X_Peer = x; _Y_Peer = y; }
+		void ShowPeer() { _PeerVisible = true;  lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN); };			
+        void HidePeer() { _PeerVisible = false; lv_obj_add_flag  (_LblPeer, LV_OBJ_FLAG_HIDDEN); };	
 
         void SetPeriph(char *Buf) { lv_label_set_text(_LblPeriph, Buf); }
-		void ShowPeriph() { lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN); };			
-        void HidePeriiph() { lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); };	
+        void SetPeriphPos(int x, int y) { _X_Periph = x; _Y_Periph = y; }
+		void ShowPeriph() { _PeriphVisible = true;  lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN); };			
+        void HidePeriph() { _PeriphVisible = false; lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); };	
 
         void SetValue(char *Buf) { lv_label_set_text(_LblValue, Buf); }
-        void ShowValue() { lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN); };			
-        void HideValue() { lv_obj_add_flag  (_LblValue, LV_OBJ_FLAG_HIDDEN); };	
+        void SetValuePos(int x, int y) { _X_Value = x; _Y_Value = y; }
+        void ShowValue() { _ValueVisible = true;  lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN); };			
+        void HideValue() { _ValueVisible = false; lv_obj_add_flag  (_LblValue, LV_OBJ_FLAG_HIDDEN); };	
 
         void Hide() { lv_obj_add_flag  (_LblPeer,   LV_OBJ_FLAG_HIDDEN);
                       lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN); 
@@ -78,6 +97,7 @@ class CompButton : public CompThing {
         CompButton();
         ~CompButton();
         void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        void Update();
         void SpinnerOn() 		{ lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN); }
         void SpinnerOff()		{ lv_obj_add_flag  (_Spinner, LV_OBJ_FLAG_HIDDEN); }
         

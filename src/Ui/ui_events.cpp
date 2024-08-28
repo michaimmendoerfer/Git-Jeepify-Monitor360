@@ -734,20 +734,11 @@ void Ui_Multi_Unload(lv_event_t * e)
 		{
 			//CompThingArray[Pos]->Hide();
 			//Serial.printf("CompThing[%d] (%s) hat Class %d\n\r", Pos, CompThingArray[Pos]->GetPeriph()->GetName(), CompThingArray[Pos]->GetClassType());
-			if (CompThingArray[Pos]->GetClassType() == 1) // ButtonClass
-			{
-				//Serial.println("will Buttonclass löschen");
-				delete ((CompButton *) CompThingArray[Pos]);
-				CompThingArray[Pos] = NULL;
-				//Serial.println("Buttonclass gelöscht");
-
-			}
-			else if (CompThingArray[Pos]->GetClassType() == 2) // SensorClass
-			{
-				//Serial.println("will Sensorclass löschen");
-				delete ((CompSensor *) CompThingArray[Pos]);
-				CompThingArray[Pos] = NULL;
-			}
+			
+			Serial.println("will irgendeine Klasse löschen");
+			delete CompThingArray[Pos];
+			CompThingArray[Pos] = NULL;
+			//Serial.println("Buttonclass gelöscht");
 		}
 	}
 }
@@ -776,16 +767,17 @@ void Ui_Multi_Prev(lv_event_t * e)
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
 	int Pos = 0;
+	CompButton *Switch = (CompButton *) CompThingArray[Pos];
 
 	Serial.println("Begin SwitchTimer");
-	if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
+	if (Switch->GetPeriph()->GetValue() == 1.0)
 	{
-		((CompButton *) CompThingArray[Pos])->SetButtonState(true);
+		Switch->SetButtonState(true);
 
 		lv_obj_t *BrotherValueLbl;
-		if (CompThingArray[Pos]->GetPeriph()->hasBrother())   
+		if (Switch->GetPeriph()->hasBrother())   
 		{
-			PeriphClass *Periph = CompThingArray[Pos]->GetPeriph();
+			PeriphClass *Periph = Switch->GetPeriph();
 			char buf[10];
 			int nk = 0;
 			float value = PeerOf(Periph)->GetPeriphBrotherValue(Periph->GetPos());
@@ -799,27 +791,27 @@ void SwitchUpdateTimer(lv_timer_t * timer)
 
 			strcat(buf, " A");
 
-			((CompButton *) CompThingArray[Pos])->SetValue(buf);
-			((CompButton *) CompThingArray[Pos])->ShowValue();
+			Switch->SetValue(buf);
+			Switch->ShowValue();
 		}
 		else
 		{
-			((CompButton *) CompThingArray[Pos])->HideValue();
+			Switch->HideValue();
 		}
 	}
 	else
 	{
-		((CompButton *) CompThingArray[Pos])->SetButtonState(false);
-		((CompButton *) CompThingArray[Pos])->HideValue();
+		Switch->SetButtonState(false);
+		Switch->HideValue();
 	}
 	
-	if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
+	if (Switch->GetPeriph()->GetChanged() == false)
 	{
-		((CompButton *) CompThingArray[Pos])->SpinnerOff();
+		Switch->SpinnerOff();
 	}
 	else
 	{
-		((CompButton *) CompThingArray[Pos])->SpinnerOn();
+		Switch->SpinnerOn();
 	}
 }
 void Ui_Switch_Next(lv_event_t * e)

@@ -600,7 +600,7 @@ void Ui_Multi_Prev(lv_event_t * e)
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
 	int Pos = 0;	
-	((CompButton *) CompThingArray[Pos])->Update();
+	CompThingArray[Pos]->Update();
 }
 void Ui_Switch_Next(lv_event_t * e)
 {
@@ -627,7 +627,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
         Ui_Switch_Prev(e);
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
-		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
+		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 0))));
 
 		Periph->SetChanged(true);
 		Serial.printf("Button %s-State in event is %d\n\r", Periph->GetName(), lv_obj_get_state(target));
@@ -671,8 +671,11 @@ void Ui_Switch_Loaded(lv_event_t * e)
 	{
 		if (CompThingArray[Pos]) delete CompThingArray[Pos];
 
-		CompThingArray[Pos] = new CompButton();
-		((CompButton *) CompThingArray[Pos])->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
+		CompButton *Switch = new CompButton();
+		Switch->SetMobileLabels(true);
+		Switch->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
+		
+		CompThingArray[Pos] = Switch;
 	}
 
 	static uint32_t user_data = 10;
@@ -695,7 +698,7 @@ void Ui_Switch_Leave(lv_event_t * e)
 	
 	if (CompThingArray[Pos]) 
 	{
-		delete (((CompButton *) CompThingArray[Pos]));
+		delete CompThingArray[Pos];
 		CompThingArray[Pos] = NULL;
 	}
 }

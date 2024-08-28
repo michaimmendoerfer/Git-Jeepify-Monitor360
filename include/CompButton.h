@@ -42,6 +42,8 @@ class CompThing {
 
     public:
         CompThing();
+        virtual ~CompThing();
+
         PeriphClass *GetPeriph() { return _Periph; }
 
         lv_obj_t* GetButton() { return _Button; }
@@ -58,7 +60,7 @@ class CompThing {
 
         void SetValue(char *Buf) { lv_label_set_text(_LblValue, Buf); }
         void ShowValue() { lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN); };			
-        void HideValue() { lv_obj_add_flag  (_LblValue, LV_OBJ_FLAG_HIDDEN); };	
+        void HideValue() { lv_obj_add_flag  (_LblValue, LV_OBJ_FLAG_HIDDEN); lv_obj_add_flag  (_LblPeriph, LV_OBJ_FLAG_HIDDEN);};	
 
         int  GetPos() { return _Pos; }
         int  GetClassType() { return _ClassType; }
@@ -75,7 +77,7 @@ class CompButton : public CompThing {
 
     public:
         CompButton();
-        virtual ~CompButton();
+        ~CompButton();
         void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
         void SpinnerOn() 		{ lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN); }
         void SpinnerOff()		{ lv_obj_add_flag  (_Spinner, LV_OBJ_FLAG_HIDDEN); }

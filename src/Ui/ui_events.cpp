@@ -489,13 +489,14 @@ void Ui_Multi_Loaded(lv_event_t * e)
 			{	
 				CompThingArray[Pos] = new CompSensor;
 				Serial.println("nach new sensor");
-				((CompSensor *) CompThingArray[Pos])->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Sensor_Clicked);
+				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Sensor_Clicked);
 				Serial.println("nach setup");
 			}
 			else if (Periph->IsSwitch())
 			{
 				CompThingArray[Pos] = new CompButton;
-				((CompButton *) CompThingArray[Pos])->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Button_Clicked);
+				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Button_Clicked);
+				CompThingArray[Pos]->Update();
 			}
 		}
 		else

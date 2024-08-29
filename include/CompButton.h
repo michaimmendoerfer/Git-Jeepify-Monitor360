@@ -51,7 +51,8 @@ class CompThing {
         CompThing();
         virtual ~CompThing();
         virtual void Update();
-
+        virtual void Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, bool ShowLabels, PeriphClass *Periph, lv_event_cb_t event_cb);
+        
         PeriphClass *GetPeriph() { return _Periph; }
 
         lv_obj_t* GetButton() { return _Button; }

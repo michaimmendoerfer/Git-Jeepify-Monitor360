@@ -22,10 +22,12 @@ CompThing::~CompThing()
 }
 void CompThing::Update()
 { 
+	
 }
 CompButton::CompButton()
 {
     _ClassType = 1;
+	_SpinnerVisible = false;
 }
 CompButton::~CompButton()
 {
@@ -253,30 +255,40 @@ void CompButton::Update()
     
     lv_obj_set_x(_Spinner, _x);
     lv_obj_set_y(_Spinner, _y);
+	if (_SpinnerVisible) 
+		lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_HIDDEN);   
+	else
+		lv_obj_add_flag(_Spinner, LV_OBJ_FLAG_HIDDEN);     
+	
     
     lv_obj_set_x(_Button, _x);
     lv_obj_set_y(_Button, _y);
-    
-	_LblPeer = lv_label_create(_Button);
-    	if (!PeerOf(_Periph)->GetName()) 
+
+	
+	lv_obj_set_x(_LblPeer, _x);
+    	lv_obj_set_y(_LblPeer, _y);
+
+	/* No Peer-Name Update
+	if ((!PeerOf(_Periph)->GetName()) or (!_PeerVisible))
 	{
 	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
 	else
 	{
 	    lv_label_set_text_fmt(_LblPeer, "%.6s", PeerOf(_Periph)->GetName());
+     		lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
-
-    lv_obj_set_x(_LblPeer, 0);
-    lv_obj_set_y(_LblPeer, -115);
-	    
+	*/
+		    
 	if ((!_Periph->GetName()) or (!_PeriphVisible)) 
     {
         lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
     }
     else 
     {
-        lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
+        if (_PeriphValueCombo)
+	{
+		lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
         lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
     }
 

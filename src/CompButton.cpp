@@ -258,22 +258,41 @@ void CompButton::Update()
 	lv_obj_set_x(_LblValue,  _X_Value);
     	lv_obj_set_y(_LblValue,  _Y_Value);
 
-	if (!_PeriphValueCombo)
+	char Buf_Periph[20] = {};
+	char Buf_Value[10] = {};
+
+	printf(Buf_Periph, "%.6s", _Periph->GetName());
+	if ((_ValueVisible) and (_Periph->GetBrotherPos() <> -1))
 	{
+		printf(Buf_Value, "%0.2fA", GetBrotherValue(_Periph));
+	}
+	
+	if (PeriphValueCombo)
+	{	
+		strcat(Buf_Periph, " ");
+		strcat(Buf_Periph, Buf_Value);
+		lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+	}
+
 		if ((!_Periph->GetName()) or (!_PeriphVisible)) 
 		    {
 		        lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
 		    }
 	        else 
 		    {
-		        lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
+		        lv_label_set_text(_LblPeriph, Buf_Periph);
 		        lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
 			
 		    }
-		if (_Periph->GetBrotherPos() <> -1)
+
+		if ((_ValueVisible) and (_Periph->GetBrotherPos() <> -1))
 		{
 			lv_label_set_text_fmt(_LblValue, "%0.2fA", GetBrotherValue(_Periph));
 		        lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+		}
+		else
+		{
+			lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
 			
     
 	lv_obj_set_x(_LblValue, _X_Value);

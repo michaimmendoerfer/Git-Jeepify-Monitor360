@@ -255,15 +255,26 @@ void CompButton::Update()
 	
 	lv_obj_set_x(_LblPeriph, _X_Periph);
     	lv_obj_set_y(_LblPeriph, _Y_Periph);
-	if ((!_Periph->GetName()) or (!_PeriphVisible)) 
-	    {
-	        lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
-	    }
-        else
-    {
-        lv_label_set_text_fmt(_LblPeriph, "%.6s (%.1f)A", _Periph->GetName());
-        lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
-    }
+	lv_obj_set_x(_LblValue,  _X_Value);
+    	lv_obj_set_y(_LblValue,  _Y_Value);
+
+	if (!_PeriphValueCombo)
+	{
+		if ((!_Periph->GetName()) or (!_PeriphVisible)) 
+		    {
+		        lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+		    }
+	        else 
+		    {
+		        lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
+		        lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+			
+		    }
+		if (_Periph->GetBrotherPos() <> -1)
+		{
+			lv_label_set_text_fmt(_LblValue, "%0.2fA", GetBrotherValue(_Periph));
+		        lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+			
     
 	lv_obj_set_x(_LblValue, _X_Value);
 	lv_obj_set_y(_LblValue, _Y_Value);

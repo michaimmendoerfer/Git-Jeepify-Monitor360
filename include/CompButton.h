@@ -90,6 +90,7 @@ class CompButton : public CompThing {
     private:
         float *_ValueToFollow;
         bool _ShowLabels;
+	bool _SpinnerVisible;
 
         lv_obj_t *_Spinner;
 

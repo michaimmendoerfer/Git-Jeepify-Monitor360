@@ -424,3 +424,87 @@ void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
 }
 
+void CompSensor::Update()
+{
+    lv_obj_set_x(_Button, _x);
+    lv_obj_set_y(_Button, _y);
+	
+	lv_obj_set_x(_LblPeer, _X_Peer);
+    lv_obj_set_y(_LblPeer, _Y_Peer);
+    
+    lv_obj_set_x(_LblPeriph, _X_Periph);
+    lv_obj_set_y(_LblPeriph, _Y_Periph);
+	
+    lv_obj_set_x(_LblValue,  _X_Value);
+    lv_obj_set_y(_LblValue,  _Y_Value);
+
+	if ((!PeerOf(_Periph)->GetName()) or (!_PeerVisible))
+	{
+	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
+	}
+	else
+	{
+	    lv_label_set_text_fmt(_LblPeer, "%.6s", PeerOf(_Periph)->GetName());
+     	lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
+	}
+
+    if ((!_Periph->GetName()) or (!_PeriphVisible)) 
+    {
+	lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+    }
+    else 
+    {
+	lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
+	lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+    
+    }
+
+    if (_ValueVisible) 
+    {
+        char buf[10];
+	int nk = 0;
+	float value = _Periph->GetValue();;
+	
+	if      (value<10)  nk = 2;
+	else if (value<100) nk = 1;
+	else                nk = 0;
+
+	if (value == -99) strcpy(buf, "--"); 
+	else dtostrf(value, 0, nk, buf);
+
+	if (_Periph->GetType() == SENS_TYPE_AMP)
+	{
+		strcat(buf, " A");
+		
+		if      (value < 20) bg = lv_color_hex(0x135A25);
+		else if (value < 25) bg = lv_color_hex(0x7C7E26);
+		else 		     bg = lv_color_hex(0x88182C);
+		lv_obj_set_style_bg_color(_Button, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+		
+		lv_arc_set_range(_Arc, 0, 400);
+		lv_arc_set_value((Arc, value*10);
+	}
+	else if (_Periph->GetType() == SENS_TYPE_VOLT)
+	{
+		strcat(buf, " V");
+					
+		if 	(value < 13)   	bg = lv_color_hex(0x135A25);
+		else if (value < 14.4) 	bg = lv_color_hex(0x7C7E26);
+		else 	 		bg = lv_color_hex(0x88182C);
+		lv_obj_set_style_bg_color(CompBase, bg, LV_PART_MAIN | LV_STATE_DEFAULT);
+		
+		lv_arc_set_range(_Arc, 90, 150);
+		lv_arc_set_value(_Arc, value*10);
+	}
+	    
+	lv_label_set_text(_LblPeriph, buf);
+        lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+    }
+    else
+    {
+        lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+    }  
+
+
+}
+

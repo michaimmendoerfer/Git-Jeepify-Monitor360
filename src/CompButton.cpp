@@ -265,10 +265,10 @@ void CompButton::Update()
 	char Buf_Periph[20] = {};
 	char Buf_Value[10] = {};
 
-	printf(Buf_Periph, "%.6s", _Periph->GetName());
+	sprintf(Buf_Periph, "%.6s", _Periph->GetName());
 	if ((_ValueVisible) and (_Periph->GetBrotherPos() > -1))
 	{
-		printf(Buf_Value, "%0.2fA", GetBrotherValueOf(_Periph));
+		sprintf(Buf_Value, "%0.2fA", GetBrotherValueOf(_Periph));
 	}
 	
 	if (_PeriphValueCombo)

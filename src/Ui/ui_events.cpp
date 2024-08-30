@@ -659,6 +659,42 @@ void Ui_Multi_Button_Clicked(lv_event_t * e)
 		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
     }
 }
+void Ui_Multi_Clicked(lv_event_t * e)
+{
+	lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+
+    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Next(e);
+    }
+    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Multi_Prev(e);
+	}
+	else if (event_code == LV_EVENT_CLICKED) {
+		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
+
+		Periph->SetChanged(true);
+		
+		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) //komisch dass nicht Released
+		{
+			Periph->SetValue(0.0);
+		}
+		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED)
+		{
+			Periph->SetValue(1.0);
+		}
+		
+		ToggleSwitch(Periph);
+		//Serial.printf("Toggleswitch Pos:%d, PeerName:%s\n\r", SwitchArray[Pos]->GetPos(), FindPeerById(SwitchArray[Pos]->GetPeerId())->GetName());
+    }	
+	else if (event_code == LV_EVENT_LONG_PRESSED) {
+        MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
+		///Ui_Multi_Unload(e);
+		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
+    }
+}
 void Ui_Multi_Sensor_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);

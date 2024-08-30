@@ -302,23 +302,20 @@ void Ui_Single_Prepare(lv_event_t * e)
 		
 	if (ActivePeriphSingle)
 	{
-		lv_label_set_text(ui_LblSinglePeriph, ActivePeriphSingle->GetName());
-		lv_label_set_text(ui_LblSinglePeer, PeerOf(ActivePeriphSingle)->GetName());
-	}
-	else
-	{
-		lv_label_set_text(ui_LblSinglePeriph, "n.n.");
-		lv_label_set_text(ui_LblSinglePeer, "n.n.");
-	}
-	
-	if (ActivePeriphSingle)
-	{
 		Serial.println("ActivePeriphSingle true");
-		uint32_t user_data = 10;
-
-		GenerateSingleMeter();
-		Serial.println("Scale Generated");
 		
+		if (CompThingArray[Pos]) 
+			{
+				delete CompThingArray[Pos];
+				CompThingArray[Pos] = NULL;
+			}
+
+		CompThingArray[Pos] = new CompMeter;
+		Serial.println("nach new Meter");
+		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
+		CompThingArray[Pos]->Update();
+		
+		static uint32_t user_data = 10;
 		if (SingleTimer) 
 		{
 			lv_timer_resume(SingleTimer);
@@ -337,46 +334,44 @@ void Ui_Single_Prepare(lv_event_t * e)
 
 void SingleUpdateTimer(lv_timer_t * timer)
 {
-	char buf[10];
-	int nk = 0;
-	float value;
-
 	Serial.println("SinglUpdateTimer");
-	
-	if (ActivePeriphSingle)
-	{
-		value = ActivePeriphSingle->GetValue();
-		//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
-		if (abs(value) < SCHWELLE) value = 0;
-
-		if      (value<10)  nk = 2;
-		else if (value<100) nk = 1;
-		else                nk = 0;
-
-		if (value == -99) strcpy(buf, "--"); 
-		else dtostrf(value, 0, nk, buf);
-
-		if (ActivePeriphSingle->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
-		if (ActivePeriphSingle->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
-		
-		lv_meter_set_indicator_value(SingleMeter, SingleIndicNeedle, value*10);
-		lv_label_set_text(ui_LblSingleValue, buf);
-	}
+	int Pos= 0;
+	if (CompThingArray[Pos]) CompThingArray[Pos]->Update();
 }
+void Ui_Single_Clicked(lv_event_t * e)
+{
+	lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
 
+    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Single_Next(e);
+    }
+    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
+        lv_indev_wait_release(lv_indev_get_act());
+        Ui_Single_Last(e);
+	}
+	else if (event_code == LV_EVENT_CLICKED) {
+		Ui_Single_Next(e);
+		}
+		
+    	}	
+	else if (event_code == LV_EVENT_LONG_PRESSED) {
+    }
+}
 void Ui_Single_Leave(lv_event_t * e)
 {
 	lv_timer_del(SingleTimer);
 	SingleTimer = NULL;
 
 	Serial.println("SingleTimer deleted");
-    
-	lv_obj_del(SingleMeter);
-	
-	
-	SingleMeter       = NULL;
-	scale             = NULL;
-	SingleIndicNeedle = NULL;
+    	int Pos = 0;
+
+	if (CompThingArray[Pos]) 
+	{
+		delete CompThingArray[Pos];
+		CompThingArray[Pos] = NULL;
+	}
 }
 
 static void SingleMeter_cb(lv_event_t * e) {
@@ -489,14 +484,14 @@ void Ui_Multi_Loaded(lv_event_t * e)
 			{	
 				CompThingArray[Pos] = new CompSensor;
 				Serial.println("nach new sensor");
-				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Clicked);
+				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, Periph, Ui_Multi_Clicked);
 				Serial.println("nach setup");
 				CompThingArray[Pos]->Update();
 			}
 			else if (Periph->IsSwitch())
 			{
 				CompThingArray[Pos] = new CompButton;
-				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, true, Periph, Ui_Multi_Clicked);
+				CompThingArray[Pos]->Setup(ui_ScrMulti, x, y, Pos, 1, Periph, Ui_Multi_Clicked);
 				CompThingArray[Pos]->Update();
 			}
 		}
@@ -792,7 +787,7 @@ void Ui_Switch_Loaded(lv_event_t * e)
 		if (CompThingArray[Pos]) delete CompThingArray[Pos];
 
 		CompThingArray[Pos] = new CompButton();
-		((CompButton *) CompThingArray[Pos])->Setup(ui_ScrSwitch, 0, 0, 0, 2, true, ActivePeriphSwitch, Ui_Switch_Clicked);
+		((CompButton *) CompThingArray[Pos])->Setup(ui_ScrSwitch, 0, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
 	}
 
 	static uint32_t user_data = 10;

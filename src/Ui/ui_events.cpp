@@ -59,6 +59,9 @@ void SettingsUpdateTimer(lv_timer_t * timer);
 
 void Ui_Multi_Button_Clicked(lv_event_t * e);
 void Ui_Multi_Sensor_Clicked(lv_event_t * e);
+void Ui_Single_Clicked(lv_event_t * e);
+void Ui_Multi_Clicked(lv_event_t * e);
+
 #pragma endregion Global_Definitions
 
 #pragma region Screen_Peer
@@ -296,6 +299,7 @@ void Ui_Single_Last(lv_event_t * e)
 
 void Ui_Single_Prepare(lv_event_t * e)
 {
+	int Pos = 0;
 	Serial.println("Single-Prepare");
 	
 	if (!ActivePeriphSingle) ActivePeriphSingle = FindFirstPeriph(NULL, SENS_TYPE_SENS);
@@ -313,6 +317,7 @@ void Ui_Single_Prepare(lv_event_t * e)
 		CompThingArray[Pos] = new CompMeter;
 		Serial.println("nach new Meter");
 		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
+		Serial.println("nach new Meter-Setup");
 		CompThingArray[Pos]->Update();
 		
 		static uint32_t user_data = 10;
@@ -353,9 +358,7 @@ void Ui_Single_Clicked(lv_event_t * e)
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
 		Ui_Single_Next(e);
-		}
-		
-    	}	
+	}
 	else if (event_code == LV_EVENT_LONG_PRESSED) {
     }
 }
@@ -385,70 +388,7 @@ static void SingleMeter_cb(lv_event_t * e) {
 	}
 
 }
-void GenerateSingleMeter(void)
-{
-	SingleMeter = lv_meter_create(ui_ScrSingle);
-	lv_obj_center(SingleMeter);
-	lv_obj_set_style_bg_color(SingleMeter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_set_style_bg_opa(SingleMeter, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
-	lv_obj_set_size(SingleMeter, SCREEN_X,	SCREEN_Y);
-	scale = lv_meter_add_scale(SingleMeter);
-	
-	lv_obj_move_background(SingleMeter);
-	lv_obj_set_style_text_color(SingleMeter, lv_color_hex(0xdbdbdb), LV_PART_TICKS);
-	
-	SingleIndicNeedle = lv_meter_add_needle_line(SingleMeter, scale, 4, lv_palette_main(LV_PALETTE_GREY), -10);
-	
-	if ((ActivePeriphSingle) and (ActivePeriphSingle->GetType() == SENS_TYPE_AMP))
-	{
-		lv_meter_set_scale_ticks(SingleMeter, scale, 41, 2, 10, lv_palette_main(LV_PALETTE_GREY));
-    	lv_meter_set_scale_major_ticks(SingleMeter, scale, 5, 4, 15, lv_color_black(), 15);
-    	lv_meter_set_scale_range(SingleMeter, scale, 0, 400, 240, 150);
-	
-		//Add a green arc to the start
-		SingleIndic = lv_meter_add_scale_lines(SingleMeter, scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
-    	lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 0);
-    	lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 250);
 
-		SingleIndic = lv_meter_add_arc(SingleMeter, scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
-    	lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 300);
-    	lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 400);
-
-		//Make the tick lines red at the end of the scale
-		SingleIndic = lv_meter_add_scale_lines(SingleMeter, scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
-		lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 300);
-		lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 400);
-
-		lv_obj_add_event_cb(SingleMeter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
-	}
-	else if ((ActivePeriphSingle) and (ActivePeriphSingle->GetType() == SENS_TYPE_VOLT))
-	{	
-		lv_meter_set_scale_ticks(SingleMeter, scale, 31, 2, 10, lv_palette_main(LV_PALETTE_GREY));
-    	lv_meter_set_scale_major_ticks(SingleMeter, scale, 5, 4, 15, lv_color_black(), 15);
-    	lv_meter_set_scale_range(SingleMeter, scale, 90, 150, 240, 150);
-	
-		SingleIndic = lv_meter_add_scale_lines(SingleMeter, scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
-    	lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 90);
-    	lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 112);
-		
-		//Add a green arc to the start
-		SingleIndic = lv_meter_add_scale_lines(SingleMeter, scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
-    	lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 112);
-    	lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 144);
-
-		SingleIndic = lv_meter_add_arc(SingleMeter, scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
-    	lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 144);
-    	lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 150);
-
-		//Make the tick lines red at the end of the scale
-		SingleIndic = lv_meter_add_scale_lines(SingleMeter, scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
-		lv_meter_set_indicator_start_value(SingleMeter, SingleIndic, 144);
-		lv_meter_set_indicator_end_value(SingleMeter, SingleIndic, 150);
-
-		//Add draw callback to override default values
-		lv_obj_add_event_cb(SingleMeter, SingleMeter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
-	}
-}
 #pragma endregion Screen_SingleMeter
 #pragma region Screen_MultiMeter
 void Ui_Multi_Loaded(lv_event_t * e)
@@ -574,7 +514,7 @@ void Ui_Multi_Clicked(lv_event_t * e)
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
 		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
-		if (Periph->isSwitch())
+		if (Periph->IsSwitch())
 		{
 			Periph->SetChanged(true);
 			
@@ -590,14 +530,14 @@ void Ui_Multi_Clicked(lv_event_t * e)
 			ToggleSwitch(Periph);
 			//Serial.printf("Toggleswitch Pos:%d, PeerName:%s\n\r", SwitchArray[Pos]->GetPos(), FindPeerById(SwitchArray[Pos]->GetPeerId())->GetName());
 		}
-		else if (Periph->isSensor())
+		else if (Periph->IsSensor())
 		{
 			ActivePeriph = Periph;
 			ActivePeer   = PeerOf(Periph);
 			_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScrSingle_screen_init);
 		}
 		
-    	}	
+    }	
 	else if (event_code == LV_EVENT_LONG_PRESSED) {
         MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
 		///Ui_Multi_Unload(e);
@@ -732,6 +672,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
 {	
 	lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
+	PeriphClass *Periph;
 
     if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
         lv_indev_wait_release(lv_indev_get_act());
@@ -742,7 +683,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
         Ui_Switch_Prev(e);
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
-		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
+		Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
 
 		Periph->SetChanged(true);
 		Serial.printf("Button %s-State in event is %d\n\r", Periph->GetName(), lv_obj_get_state(target));

@@ -194,7 +194,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         }
         if (NewPeer)
         {
-            ReportAll();
+            //ReportAll();
             RegisterPeers();
             NewPeer = false;
         }

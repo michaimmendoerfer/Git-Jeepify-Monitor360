@@ -519,71 +519,13 @@ void Ui_Multi_Loaded(lv_event_t * e)
 }
 void MultiUpdateTimer(lv_timer_t * timer)
 {
-	lv_obj_t *CompBase;
-
-	static char ValueBuf[10];
-	static int nk = 0;
-	static float value;
-	lv_color_t bg;
-
 	Serial.printf("MultiTimer - Screen[%d] \n\r",ActiveMultiScreen);
 	
 	for (int Pos=0; Pos<PERIPH_PER_SCREEN; Pos++) 
 	{
 		Serial.printf("MultiTimer untersuche Pos:%d Id=(%d)\n\r", Pos, Screen[ActiveMultiScreen].GetPeriphId(Pos));
 
-		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0)
-		{
-			CompThingArray[Pos]->Update();
-				case SENS_TYPE_SWITCH:
-					if (CompThingArray[Pos]->GetPeriph()->GetValue() == 1.0)
-					{
-						((CompButton *) CompThingArray[Pos])->SetButtonState(true);
-
-						//ggf show Sens-brother
-
-						lv_obj_t *BrotherValueLbl;
-						if (CompThingArray[Pos]->GetPeriph()->hasBrother())   
-						{
-							PeriphClass *Periph = CompThingArray[Pos]->GetPeriph();
-							char buf[10];
-							int nk = 0;
-							float value = PeerOf(Periph)->GetPeriphBrotherValue(Periph->GetPos());
-							
-							if      (value<10)  nk = 2;
-							else if (value<100) nk = 1;
-							else                nk = 0;
-
-							if (value == -99) strcpy(buf, "--"); 
-							else dtostrf(value, 0, nk, buf);
-
-							strcat(buf, " A");
-
-							((CompButton *) CompThingArray[Pos])->SetValue(buf);
-							((CompButton *) CompThingArray[Pos])->ShowValue();
-						}
-						else
-						{
-							((CompButton *) CompThingArray[Pos])->HideValue();
-						}
-					}
-					else
-					{
-						((CompButton *) CompThingArray[Pos])->SetButtonState(false);
-						((CompButton *) CompThingArray[Pos])->HideValue();
-					}
-					
-					if (CompThingArray[Pos]->GetPeriph()->GetChanged() == false)
-					{
-						((CompButton *) CompThingArray[Pos])->SpinnerOff();
-					}
-					else
-					{
-						((CompButton *) CompThingArray[Pos])->SpinnerOn();
-					}
-					break;
-			}
-		}
+		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0) CompThingArray[Pos]->Update();
 	}
 }
 void Ui_Multi_Button_Clicked(lv_event_t * e)
@@ -776,52 +718,9 @@ void Ui_Multi_Prev(lv_event_t * e)
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
 	int Pos = 0;
-	CompButton *Switch = (CompButton *) CompThingArray[Pos];
 
 	Serial.println("Begin SwitchTimer");
-	if (Switch->GetPeriph()->GetValue() == 1.0)
-	{
-		Switch->SetButtonState(true);
-
-		lv_obj_t *BrotherValueLbl;
-		if (Switch->GetPeriph()->hasBrother())   
-		{
-			PeriphClass *Periph = Switch->GetPeriph();
-			char buf[10];
-			int nk = 0;
-			float value = PeerOf(Periph)->GetPeriphBrotherValue(Periph->GetPos());
-			
-			if      (value<10)  nk = 2;
-			else if (value<100) nk = 1;
-			else                nk = 0;
-
-			if (value == -99) strcpy(buf, "--"); 
-			else dtostrf(value, 0, nk, buf);
-
-			strcat(buf, " A");
-
-			Switch->SetValue(buf);
-			Switch->ShowValue();
-		}
-		else
-		{
-			Switch->HideValue();
-		}
-	}
-	else
-	{
-		Switch->SetButtonState(false);
-		Switch->HideValue();
-	}
-	
-	if (Switch->GetPeriph()->GetChanged() == false)
-	{
-		Switch->SpinnerOff();
-	}
-	else
-	{
-		Switch->SpinnerOn();
-	}
+	CompThingArray[Pos]->Update();
 }
 void Ui_Switch_Next(lv_event_t * e)
 {

@@ -21,6 +21,7 @@ CompThing::~CompThing()
 {
 	if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
     Serial.println("Button weg");
+	
 }
 void CompThing::Update()
 { 
@@ -307,7 +308,6 @@ CompSensor::~CompSensor()
 {
     lv_obj_remove_event_cb(_Button, _event_cb);
     Serial.println("CompSensor Destructor");
-    if (_Button) { lv_obj_del(_Button); _Button = NULL; }
 }
 void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
@@ -495,6 +495,8 @@ CompMeter::CompMeter()
 }
 CompMeter::~CompMeter() 
 {
+	lv_obj_remove_event_cb(_Button, _event_cb);
+    Serial.println("CompMeter Destructor");
 }
 void CompMeter::Setup((lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb) 
 {
@@ -569,7 +571,7 @@ _Size = size;
 		lv_meter_set_indicator_end_value(_Button, _Indic, 150);
 
 		//Add draw callback to override default values
-		lv_obj_add_event_cb(_Button, Meter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+		lv_obj_add_event_cb(_Button, event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
 	}
 }
 void CompMeter::Update() 

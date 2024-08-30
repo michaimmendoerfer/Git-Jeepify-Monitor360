@@ -481,14 +481,155 @@ void CompSensor::Update()
 		lv_arc_set_value(_Arc, value*10);
 	}
 	    
-	lv_label_set_text(_LblPeriph, buf);
+	lv_label_set_text(_LblValue, buf);
         lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
     }
     else
     {
         lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
     }  
-
-
 }
+
+CompMeter::CompMeter() 
+{
+}
+CompMeter::~CompMeter() 
+{
+}
+void CompMeter::Setup((lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb) 
+{
+	_Periph = Periph;
+    _event_cb = event_cb;
+    _Pos = Pos;
+   
+    _x = x;
+    _y = y;		
+
+    _Width  = size;
+    _Height = size;
+    
+_Size = size;	
+
+	_Button = lv_meter_create(comp_parent);
+	lv_obj_center(_Button);
+	lv_obj_set_style_bg_color(_Button, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+	lv_obj_set_style_bg_opa(_Button, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+	lv_obj_set_size(_Button, _Width, _Height);
+	
+	_Scale = lv_meter_add_scale(_Button);
+	lv_obj_move_background(_Button);
+	lv_obj_set_style_text_color(_Button, lv_color_hex(0xdbdbdb), LV_PART_TICKS);
+	
+	_IndicNeedle = lv_meter_add_needle_line(_Button, _Scale, 4, lv_palette_main(LV_PALETTE_GREY), -10);
+	
+	if (_Periph->GetType() == SENS_TYPE_AMP)
+	{
+		lv_meter_set_scale_ticks(_Button, _Scale, 41, 2, 10, lv_palette_main(LV_PALETTE_GREY));
+    	lv_meter_set_scale_major_ticks(_Button, _Scale, 5, 4, 15, lv_color_black(), 15);
+    	lv_meter_set_scale_range(_Button, _Scale, 0, 400, 240, 150);
+	
+		//Add a green arc to the start
+		_Indic = lv_meter_add_scale_lines(_Button, _Scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
+    	lv_meter_set_indicator_start_value(_Button, _Indic, 0);
+    	lv_meter_set_indicator_end_value(_Button, _Indic, 250);
+
+		_Indic = lv_meter_add_arc(_Button, _Scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
+    	lv_meter_set_indicator_start_value(_Button, _Indic, 300);
+    	lv_meter_set_indicator_end_value(_Button, _Indic, 400);
+
+		//Make the tick lines red at the end of the scale
+		_Indic = lv_meter_add_scale_lines(_Button, _Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+		lv_meter_set_indicator_start_value(_Button, _Indic, 300);
+		lv_meter_set_indicator_end_value(_Button, _Indic, 400);
+
+		lv_obj_add_event_cb(_Button, Meter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+	}
+	else if (_Periph->GetType() == SENS_TYPE_VOLT)
+	{	
+		lv_meter_set_scale_ticks(_Button, _Scale, 31, 2, 10, lv_palette_main(LV_PALETTE_GREY));
+    	lv_meter_set_scale_major_ticks(_Button, _Scale, 5, 4, 15, lv_color_black(), 15);
+    	lv_meter_set_scale_range(_Button, _Scale, 90, 150, 240, 150);
+	
+		_Indic = lv_meter_add_scale_lines(_Button, _Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+    	lv_meter_set_indicator_start_value(_Button, _Indic, 90);
+    	lv_meter_set_indicator_end_value(_Button, _Indic, 112);
+		
+		//Add a green arc to the start
+		_Indic = lv_meter_add_scale_lines(_Button, _Scale, lv_palette_main(LV_PALETTE_GREEN), lv_palette_main(LV_PALETTE_GREEN), false, 0);
+    	lv_meter_set_indicator_start_value(_Button, _Indic, 112);
+    	lv_meter_set_indicator_end_value(_Button, _Indic, 144);
+
+		_Indic = lv_meter_add_arc(_Button, _Scale, 3, lv_palette_main(LV_PALETTE_RED), 0);
+    	lv_meter_set_indicator_start_value(_Button, _Indic, 144);
+    	lv_meter_set_indicator_end_value(_Button, _Indic, 150);
+
+		//Make the tick lines red at the end of the scale
+		_Indic = lv_meter_add_scale_lines(_Button, _Scale, lv_palette_main(LV_PALETTE_RED), lv_palette_main(LV_PALETTE_RED), false, 0);
+		lv_meter_set_indicator_start_value(_Button, _Indic, 144);
+		lv_meter_set_indicator_end_value(_Button, _Indic, 150);
+
+		//Add draw callback to override default values
+		lv_obj_add_event_cb(_Button, Meter_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+	}
+}
+void CompMeter::Update() 
+{
+	lv_obj_set_x(_Button, _x);
+    	lv_obj_set_y(_Button, _y);
+	
+	lv_obj_set_x(_LblPeer, _X_Peer);
+    	lv_obj_set_y(_LblPeer, _Y_Peer);
+    
+    	lv_obj_set_x(_LblPeriph, _X_Periph);
+    	lv_obj_set_y(_LblPeriph, _Y_Periph);
+	
+    	lv_obj_set_x(_LblValue,  _X_Value);
+    	lv_obj_set_y(_LblValue,  _Y_Value);
+
+	if ((!PeerOf(_Periph)->GetName()) or (!_PeerVisible))
+	{
+	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
+	}
+	else
+	{
+	    	lv_label_set_text_fmt(_LblPeer, "%.6s", PeerOf(_Periph)->GetName());
+     		lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
+	}
+
+    if ((!_Periph->GetName()) or (!_PeriphVisible)) 
+    {
+		lv_obj_add_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+    }
+    else 
+    {
+		lv_label_set_text_fmt(_LblPeriph, "%.6s", _Periph->GetName());
+		lv_obj_clear_flag(_LblPeriph, LV_OBJ_FLAG_HIDDEN);
+    
+    }
+
+        char buf[10];
+	int nk = 0;
+	float value = _Periph->GetValue();
+	    
+		//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
+		if (abs(value) < SCHWELLE) value = 0;
+
+		if      (value<10)  nk = 2;
+		else if (value<100) nk = 1;
+		else                nk = 0;
+
+		if (value == -99) strcpy(buf, "--"); 
+		else dtostrf(value, 0, nk, buf);
+
+		if (_Periph->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
+		if (_Periph->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
+		
+	lv_meter_set_indicator_value(_Button, _IndicNeedle, value*10);
+
+	if (_ValueVisible) lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+	else lv_obj_add_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
+	
+	lv_label_set_text(_LblValue, buf);
+}
+
 

@@ -164,7 +164,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 {
                     if (doc.containsKey((const char*)P->GetPeriphName(i))) {
                         float TempSensor = (float)doc[P->GetPeriphName(i)];
-                        
+                        if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
                         //Serial.print(P->GetPeriphName(i)); Serial.print(" found = "); Serial.println(TempSensor);
                         
                         if (TempSensor != P->GetPeriphValue(i)) {

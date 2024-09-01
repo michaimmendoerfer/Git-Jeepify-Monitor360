@@ -78,6 +78,7 @@ lv_obj_t * ui_LblJSON2;
 void ui_ScrSingle_screen_init(void);
 void ui_event_ScrSingle(lv_event_t * e);
 lv_obj_t * ui_ScrSingle;
+lv_obj_t * ui_Label5;
 
 
 // SCREEN: ui_ScrPeer

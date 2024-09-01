@@ -401,10 +401,10 @@ void Ui_Multi_Loaded(lv_event_t * e)
 	{
 		int x; int y;
 		switch (Pos) {
-			case 0: x=-60; y=-60; break;
-			case 1: x= 95; y=-60; break;
-			case 2: x=-60; y= 55; break;
-			case 3: x= 95; y= 55; break;
+			case 0: x=-80; y=-50; break;
+			case 1: x= 80; y=-50; break;
+			case 2: x=-80; y= 65; break;
+			case 3: x= 80; y= 65; break;
 		}
 
 		PeriphClass *Periph =  Screen[ActiveMultiScreen].GetPeriph(Pos);
@@ -728,7 +728,7 @@ void Ui_Switch_Loaded(lv_event_t * e)
 		if (CompThingArray[Pos]) delete CompThingArray[Pos];
 
 		CompThingArray[Pos] = new CompButton();
-		((CompButton *) CompThingArray[Pos])->Setup(ui_ScrSwitch, 0, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
+		CompThingArray[Pos]->Setup(ui_ScrSwitch, 0, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
 	}
 
 	static uint32_t user_data = 10;

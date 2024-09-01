@@ -401,10 +401,10 @@ void Ui_Multi_Loaded(lv_event_t * e)
 	{
 		int x; int y;
 		switch (Pos) {
-			case 0: x=-80; y=-50; break;
-			case 1: x= 80; y=-50; break;
-			case 2: x=-80; y= 65; break;
-			case 3: x= 80; y= 65; break;
+			case 0: x= -65; y=-50; break;
+			case 1: x=  65; y=-50; break;
+			case 2: x= -65; y= 70; break;
+			case 3: x=  65; y= 70; break;
 		}
 
 		PeriphClass *Periph =  Screen[ActiveMultiScreen].GetPeriph(Pos);
@@ -463,42 +463,6 @@ void MultiUpdateTimer(lv_timer_t * timer)
 		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0) CompThingArray[Pos]->Update();
 	}
 }
-void Ui_Multi_Button_Clicked(lv_event_t * e)
-{
-	lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-
-    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Multi_Next(e);
-    }
-    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Multi_Prev(e);
-	}
-	else if (event_code == LV_EVENT_CLICKED) {
-		PeriphClass *Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
-
-		Periph->SetChanged(true);
-		
-		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) //komisch dass nicht Released
-		{
-			Periph->SetValue(0.0);
-		}
-		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED)
-		{
-			Periph->SetValue(1.0);
-		}
-		
-		ToggleSwitch(Periph);
-		//Serial.printf("Toggleswitch Pos:%d, PeerName:%s\n\r", SwitchArray[Pos]->GetPos(), FindPeerById(SwitchArray[Pos]->GetPeerId())->GetName());
-    }	
-	else if (event_code == LV_EVENT_LONG_PRESSED) {
-        MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
-		///Ui_Multi_Unload(e);
-		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
-    }
-}
 void Ui_Multi_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
@@ -532,37 +496,11 @@ void Ui_Multi_Clicked(lv_event_t * e)
 		}
 		else if (Periph->IsSensor())
 		{
-			ActivePeriph = Periph;
+			ActivePeriphSingle = Periph;
 			ActivePeer   = PeerOf(Periph);
 			_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScrSingle_screen_init);
 		}
 		
-    }	
-	else if (event_code == LV_EVENT_LONG_PRESSED) {
-        MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
-		///Ui_Multi_Unload(e);
-		_ui_screen_change(&ui_ScrPeriph, LV_SCR_LOAD_ANIM_NONE, 0, 0, &ui_ScrPeriph_screen_init);
-    }
-}
-void Ui_Multi_Sensor_Clicked(lv_event_t * e)
-{
-	lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-
-    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Multi_Next(e);
-    }
-    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Multi_Prev(e);
-	}
-	else if (event_code == LV_EVENT_CLICKED) {
-		int Pos = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
-		ActivePeriph = Screen[ActiveMultiScreen].GetPeriph(Pos);
-		ActivePeer   = Screen[ActiveMultiScreen].GetPeer(Pos);
-		
-		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScrSingle_screen_init);
     }	
 	else if (event_code == LV_EVENT_LONG_PRESSED) {
         MultiPosToChange = atoi(lv_label_get_text(lv_obj_get_child(target, 4)));
@@ -751,7 +689,8 @@ void Ui_Switch_Leave(lv_event_t * e)
 	
 	if (CompThingArray[Pos]) 
 	{
-		delete (((CompButton *) CompThingArray[Pos]));
+		lv_obj_invalidate(CompThingArray[Pos]->GetButton());
+		delete CompThingArray[Pos];
 		CompThingArray[Pos] = NULL;
 	}
 }

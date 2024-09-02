@@ -17,10 +17,6 @@
 #include "CompButton.h"
 
 #pragma region Global_Definitions
-lv_obj_t *SingleMeter;
-lv_meter_indicator_t * SingleIndic;
-lv_meter_indicator_t * SingleIndicNeedle;
-lv_meter_scale_t * scale;
 uint8_t MultiPosToChange;
 
 PeriphClass *ActivePeriphSingle;
@@ -29,8 +25,6 @@ PeriphClass *ActivePeriphSwitch;
 lv_obj_t *Ui_LedSnd;
 lv_obj_t *Ui_LedRcv;
 lv_obj_t *Ui_LedPair;
-
-_lv_obj_t *MultiComponent[PERIPH_PER_SCREEN];
 
 lv_timer_t *SingleTimer;
 lv_timer_t *MultiTimer;
@@ -49,7 +43,6 @@ int FirstShownSwitch;
  
 LV_IMG_DECLARE(ui_img_btn_png);      
 
-void GenerateSingleMeter(void);
 void Keyboard_cb(lv_event_t * event);
 
 void SingleUpdateTimer(lv_timer_t * timer);
@@ -57,8 +50,6 @@ void MultiUpdateTimer(lv_timer_t * timer);
 void SwitchUpdateTimer(lv_timer_t * timer);
 void SettingsUpdateTimer(lv_timer_t * timer);
 
-void Ui_Multi_Button_Clicked(lv_event_t * e);
-void Ui_Multi_Sensor_Clicked(lv_event_t * e);
 void Ui_Single_Clicked(lv_event_t * e);
 void Ui_Multi_Clicked(lv_event_t * e);
 

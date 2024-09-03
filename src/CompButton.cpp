@@ -20,7 +20,7 @@ CompThing::CompThing()
 CompThing::~CompThing()
 {
 	if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
-    Serial.println("Button weg");
+    Serial.println("CompThing-Destructor - Button weg");
 	
 }
 void CompThing::Update()

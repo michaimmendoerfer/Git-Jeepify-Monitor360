@@ -84,6 +84,8 @@ class CompThing {
 
         int  GetPos() 			{ return _Pos; }
         int  GetClassType() 		{ return _ClassType; }
+
+	void SetStyle(lv_obj_t *obj);
 };
 
 class CompButton : public CompThing {

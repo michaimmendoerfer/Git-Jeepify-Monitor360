@@ -44,11 +44,11 @@ CompButton::~CompButton()
 	lv_obj_invalidate(_LblPeer);
     lv_obj_invalidate(_LblPeriph);
     lv_obj_invalidate(_LblValue);
-    
-
-    Serial.println("CompButton Destructor");
+	
     if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
-    Serial.println("Spinner weg");
+    #ifdef DEBUG 
+	Serial.println("CompButton Destructor - Spinner weg");
+    #endif
 }
 void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
@@ -85,8 +85,7 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_width(_Spinner,  _Width+30);
     lv_obj_set_height(_Spinner, _Width+30);
 	
-    lv_obj_set_x(_Spinner, _x);
-    lv_obj_set_y(_Spinner, _y);
+    lv_obj_set_pos(_Spinner, _x, _y);
     lv_obj_add_flag(_Spinner, LV_OBJ_FLAG_HIDDEN);     
     lv_obj_clear_flag(_Spinner, LV_OBJ_FLAG_CLICKABLE);     
     lv_obj_set_style_arc_color(_Spinner, lv_color_hex(0x83061F), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -117,9 +116,8 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_obj_set_align(_Button, LV_ALIGN_CENTER);
     lv_obj_set_height(_Button, _Height);
     lv_obj_set_width (_Button, _Width);   /// 1
-    lv_obj_set_x(_Button, _x);
-    lv_obj_set_y(_Button, _y);
-    
+    lv_obj_set_pos(_Button, _x, _y);
+        
     lv_obj_add_flag(_Button, LV_OBJ_FLAG_CHECKABLE);     
     lv_obj_clear_flag(_Button, LV_OBJ_FLAG_SCROLLABLE);     
 	   
@@ -241,20 +239,16 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
     lv_label_set_text_fmt(_LblPos, "%d", _Pos);
     lv_obj_set_style_text_color(_LblPos, lv_color_hex(0xFF0000), LV_PART_MAIN | LV_STATE_DEFAULT);
     
-    lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  
-    //Update();
-	
+    lv_obj_add_event_cb(_Button, _event_cb, LV_EVENT_ALL, NULL);  	
 }
 void CompButton::Update()
 {
-    lv_obj_set_x(_Spinner, _x);
-    lv_obj_set_y(_Spinner, _y);
-    
-    lv_obj_set_x(_Button, _x);
-    lv_obj_set_y(_Button, _y);
+    lv_obj_set_pos(_Spinner, _x, _y);
+    lv_obj_set_pos(_Button,  _x, _y);
 
+    //set Switch-state - show Peer if named
     if (_Periph->GetValue() == 1) lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
-    else lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
+    else 			  lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
     
 	if ((PeerOf(_Periph)->GetName() == NULL) or (!_PeerVisible))
 	{

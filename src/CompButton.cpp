@@ -8,6 +8,7 @@
 #include "CompButton.h"
 
 //#define DEBUG 1
+//this ist branch2
 
 CompThing::CompThing()
 {

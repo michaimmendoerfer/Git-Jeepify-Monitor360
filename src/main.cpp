@@ -32,6 +32,13 @@ int PeerCount;
 Preferences preferences;
 uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
+/*struct ConfirmStruct {
+    int PeerId;
+    String Message;
+    int Try;
+};
+MyLinkedList<ConfirmStruct*> ConfirmList = MyLinkedList<ConfirmStruct*>();
+*/
 PeerClass Self;
 
 String jsondataBuf;
@@ -65,6 +72,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
     String BufS; char Buf[50] = {};
     bool SaveNeeded = false;
     bool NewPeer    = false;
+    bool PeerCanConfirm = false;
     
     jsondataBuf = jsondata;
     PrepareJSON();
@@ -77,6 +85,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         TSMsgRcv = millis();
         int Order = (int)doc["Order"];
 
+        // new Peer wants to pair and module too - create it
         if ((!P) and (Order == SEND_CMD_PAIR_ME) and (Self.GetPairMode())) // neuen Peer registrieren
         { 
             P = new PeerClass();
@@ -90,9 +99,9 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         { 
             P->SetTSLastSeen(millis());
             if (Self.GetDebugMode()) Serial.printf("bekannter Node: %s - LastSeen at %d\n\r", P->GetName(), P->GetTSLastSeen());
-            
+
+            // first time register periphs or periodically check if changed - save if needed
             if (Order == SEND_CMD_PAIR_ME) 
-            // check or init names
             { 
                 int    Status       = doc["Status"];
                 String PeerName     = doc["Node"];
@@ -103,6 +112,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     SaveNeeded = true;
                     P->Setup(PeerName.c_str(), (int)doc["Type"], PeerVersion.c_str(), info->src_addr, 
                         (bool) bitRead(Status, 1), (bool) bitRead(Status, 0), (bool) bitRead(Status, 2), (bool) bitRead(Status, 3));
+                    P->SetConfirm(bitRead(Status, 4);
                 } 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
@@ -142,23 +152,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 
                 SendPairingConfirm(P); 
             }
-
-            
-            /*// "Order"="UpdateName"; "Pos"="32; "NewName"="Horst"; Pos 99 is moduleName
-            else if (Order == SEND_CMD_UPDATE_NAME)// vieleicht bald weg
-            {
-                int Pos = (int) doc["Pos"];
-                String NewName = doc["NewName"];
-
-                if (NewName != "") 
-                {
-                    if (Pos == 99) P->SetName(NewName.c_str());
-                    else           P->SetPeriphName(Pos, NewName.c_str());
-                }
-
-                SavePeers();
-            }*/
-            else // Peer known - no status, no pairing so read new values
+            else // Peer known - no status-report, no pairing so read new values
             {
                 for (int i=0; i<MAX_PERIPHERALS; i++) 
                 {
@@ -199,8 +193,8 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             NewPeer = false;
         }
     }
-    else 
-    {        // Error bei JSON
+    else // Error bei JSON
+    {        
         Serial.print(F("deserializeJson() failed: ")); 
         Serial.println(error.f_str());
         return;

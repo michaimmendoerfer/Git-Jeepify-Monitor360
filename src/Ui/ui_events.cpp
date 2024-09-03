@@ -449,7 +449,7 @@ void MultiUpdateTimer(lv_timer_t * timer)
 	
 	for (int Pos=0; Pos<PERIPH_PER_SCREEN; Pos++) 
 	{
-		Serial.printf("MultiTimer untersuche Pos:%d Id=(%d)\n\r", Pos, Screen[ActiveMultiScreen].GetPeriphId(Pos));
+		//Serial.printf("MultiTimer untersuche Pos:%d Id=(%d)\n\r", Pos, Screen[ActiveMultiScreen].GetPeriphId(Pos));
 
 		if (Screen[ActiveMultiScreen].GetPeriphId(Pos) >= 0) CompThingArray[Pos]->Update();
 	}

@@ -32,13 +32,13 @@ int PeerCount;
 Preferences preferences;
 uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-/*struct ConfirmStruct {
-    int PeerId;
+struct ConfirmStruct {
+    uint8_t Address[6];
     String Message;
     int Try;
 };
 MyLinkedList<ConfirmStruct*> ConfirmList = MyLinkedList<ConfirmStruct*>();
-*/
+
 PeerClass Self;
 
 String jsondataBuf;
@@ -112,7 +112,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     SaveNeeded = true;
                     P->Setup(PeerName.c_str(), (int)doc["Type"], PeerVersion.c_str(), info->src_addr, 
                         (bool) bitRead(Status, 1), (bool) bitRead(Status, 0), (bool) bitRead(Status, 2), (bool) bitRead(Status, 3));
-                    P->SetConfirm(bitRead(Status, 4);
+                    P->SetConfirm(bitRead(Status, 4));
                 } 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
@@ -249,6 +249,31 @@ void loop()
 #pragma endregion Main
 
 #pragma region Send-Things
+esp_err_t  JeepifySend(const uint8_t *peer_addr, const uint8_t *data, size_t len, bool ConfirmNeeded = false)
+{
+    esp_err_t SendStatus = esp_now_send(peer_addr, data, len);
+    Serial.printf("SendStatus was %d, ConfirmNeeded = %d\n\r", SendStatus, ConfirmNeeded);
+    if ((SendStatus != ESP_OK) and (ConfirmNeeded))
+    {   
+        PeerClass *P = FindPeerByMAC(peer_addr);
+
+        if (P->GetConfirm())
+        {
+            ConfirmStruct *Confirm = new ConfirmStruct;
+            for (int i=0 ; i<6; i++) Confirm->Address[i] = peer_addr[i];
+            
+            char* buff = (char*) data;   
+            Confirm->Message = (String) buff;
+            
+            Confirm->Try = 1;
+
+            ConfirmList.add(Confirm);
+
+            Serial.printf("added Msg: %s to ConfirmList\n\r", Confirm->Message, Confirm->Try);   
+        }
+    }
+    return SendStatus;
+}
 void SendPing(lv_timer_t * timer) {
     JsonDocument doc; String jsondata;
 
@@ -269,6 +294,24 @@ void SendPing(lv_timer_t * timer) {
         P = PeerList.get(i);
         if (P->GetType() > 0) esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
     }
+
+    if (ConfirmList.size() > 0)
+    { 
+        for (int i=ConfirmList.size()-1; i>=0; i--)
+        {
+            ConfirmStruct *Confirm = ConfirmList.get(i);
+            Confirm->Try++;
+            esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message.c_str(), 200); 
+            Serial.printf("reSending Msg: %s from ConfirmList Try: %d --> %d\n\r", Confirm->Message, Confirm->Try, SendStatus);
+            if ((SendStatus == ESP_OK) or (Confirm->Try == 11));
+            {
+                Serial.printf("deleted Msg: %s from ConfirmList after %d tries\n\r", Confirm->Message, Confirm->Try);
+                delete Confirm;
+                ConfirmList.remove(i);
+            }
+        }
+    }
+    
 }
 void SendPairingConfirm(PeerClass *P) {
   JsonDocument doc; String jsondata; 
@@ -308,7 +351,7 @@ bool ToggleSwitch(PeerClass *P, int PerNr)
     serializeJson(doc, jsondata);  
     
     TSMsgSnd = millis();
-    esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
     if (Self.GetDebugMode()) Serial.println(jsondata);
 
     return true;
@@ -327,7 +370,7 @@ bool ToggleSwitch(PeriphClass *Periph)
     serializeJson(doc, jsondata);  
     
     TSMsgSnd = millis();
-    esp_now_send(FindPeerById(Periph->GetPeerId())->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    JeepifySend(FindPeerById(Periph->GetPeerId())->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
     if (Self.GetDebugMode()) Serial.println(jsondata);
     
     return true;
@@ -341,7 +384,7 @@ void SendCommand(PeerClass *P, String Cmd) {
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 void SendCommand(PeerClass *P, int Cmd) {
@@ -353,7 +396,7 @@ void SendCommand(PeerClass *P, int Cmd) {
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 void SendCommand(PeerClass *P, int Cmd, String Value) {
@@ -366,7 +409,7 @@ void SendCommand(PeerClass *P, int Cmd, String Value) {
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 #pragma endregion Send-Things

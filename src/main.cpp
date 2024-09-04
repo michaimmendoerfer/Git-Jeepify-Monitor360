@@ -295,7 +295,7 @@ void SendPing(lv_timer_t * timer) {
         if (P->GetType() > 0) esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
     }
 
-    if (ConfirmList.size() > 0)
+    /*if (ConfirmList.size() > 0)
     { 
         for (int i=ConfirmList.size()-1; i>=0; i--)
         {
@@ -310,7 +310,7 @@ void SendPing(lv_timer_t * timer) {
                 ConfirmList.remove(i);
             }
         }
-    }
+    }*/
     
 }
 void SendPairingConfirm(PeerClass *P) {
@@ -341,41 +341,28 @@ void SendPairingConfirm(PeerClass *P) {
 }
 bool ToggleSwitch(PeerClass *P, int PerNr)
 {
-    JsonDocument doc; String jsondata; 
-    
-    doc["from"]  = NODE_NAME;   
-    doc["Order"] = SEND_CMD_SWITCH_TOGGLE;
-    doc["Value"] = P->GetPeriphName(PerNr);
-    doc["Pos"]   = P->GetPeriphPos(PerNr);
-    
-    serializeJson(doc, jsondata);  
-    
-    TSMsgSnd = millis();
-    JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
-
-    return true;
+    return ToggleSwitch(P->GetPeriphPtr(PerNr));
 }
 bool ToggleSwitch(PeriphClass *Periph)
 {
     JsonDocument doc; String jsondata; 
     
-    doc["from"]  = NODE_NAME;   
+    doc["from"]  = Self.GetName();  
     doc["Order"] = SEND_CMD_SWITCH_TOGGLE;
     doc["Value"] = Periph->GetName();
     doc["Pos"]   = Periph->GetPos();
 
-    Serial.printf("Toggle Value = %f\n\r", Periph->GetValue());
+    //Serial.printf("Toggle Value = %f\n\r", Periph->GetValue());
     
     serializeJson(doc, jsondata);  
     
     TSMsgSnd = millis();
-    JeepifySend(FindPeerById(Periph->GetPeerId())->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
+    esp_now_send(FindPeerById(Periph->GetPeerId())->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
     if (Self.GetDebugMode()) Serial.println(jsondata);
     
     return true;
 }
-void SendCommand(PeerClass *P, String Cmd) {
+/*void SendCommand(PeerClass *P, String Cmd) {
   JsonDocument doc; String jsondata; 
   
   doc["from"]  = Self.GetName();   
@@ -384,10 +371,10 @@ void SendCommand(PeerClass *P, String Cmd) {
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
+  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
-}
-void SendCommand(PeerClass *P, int Cmd) {
+}*/
+/*void SendCommand(PeerClass *P, int Cmd) {
   JsonDocument doc; String jsondata; 
   
   doc["from"]  = Self.GetName();   
@@ -396,20 +383,21 @@ void SendCommand(PeerClass *P, int Cmd) {
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
+  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
-}
-void SendCommand(PeerClass *P, int Cmd, String Value) {
+}*/
+
+void SendCommand(PeerClass *P, int Cmd, String Value = "") {
   JsonDocument doc; String jsondata; 
   
   doc["from"]  = Self.GetName();   
   doc["Order"] = Cmd;
-  doc["Value"] = Value;
+  if (Value != "") doc["Value"] = Value;
   
   serializeJson(doc, jsondata);  
   
   TSMsgSnd = millis();
-  JeepifySend(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100, true);  //Sending "jsondata"  
+  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 #pragma endregion Send-Things

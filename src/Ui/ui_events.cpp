@@ -87,7 +87,6 @@ void Ui_Peer_Prepare()
 void Ui_Peer_Loaded(lv_event_t * e)
 {
 	if (!ActivePeer) ActivePeer = FindFirstPeer(MODULE_ALL);
-
 	Ui_Peer_Prepare();
 }
 
@@ -139,13 +138,12 @@ void Ui_Set_Prepare(lv_event_t * e)
 	if (SettingsTimer) 
 		{
 			lv_timer_resume(SettingsTimer);
-			
-			Serial.println("SettingsTimer resumed");
+			if (Self.GetDebugMode()) Serial.println("SettingsTimer resumed");
 		}
 		else 
 		{
 			SettingsTimer = lv_timer_create(SettingsUpdateTimer, 500,  &user_data);
-			Serial.println("SettingsTimer created");
+			if (Self.GetDebugMode()) Serial.println("SettingsTimer created");
 		}
 }
 
@@ -194,7 +192,7 @@ void Ui_Set_Leave(lv_event_t * e)
 	lv_timer_del(SettingsTimer);
 	SettingsTimer = NULL;
 
-	Serial.println("SettingsTimer deleted");
+	if (Self.GetDebugMode()) Serial.println("SettingsTimer deleted");
 }
 
 #pragma endregion Screen_Settings
@@ -291,7 +289,7 @@ void Ui_Single_Last(lv_event_t * e)
 void Ui_Single_Prepare(lv_event_t * e)
 {
 	int Pos = 0;
-	Serial.println("Single-Prepare");
+	if (Self.GetDebugMode()) Serial.println("Single-Prepare");
 	
 	if (!ActivePeriphSingle) ActivePeriphSingle = FindFirstPeriph(NULL, SENS_TYPE_SENS);
 		
@@ -306,9 +304,9 @@ void Ui_Single_Prepare(lv_event_t * e)
 			}
 
 		CompThingArray[Pos] = new CompMeter;
-		Serial.println("nach new Meter");
+		//Serial.println("nach new Meter");
 		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
-		Serial.println("nach new Meter-Setup");
+		//Serial.println("nach new Meter-Setup");
 		CompThingArray[Pos]->Update();
 		
 		static uint32_t user_data = 10;
@@ -316,12 +314,12 @@ void Ui_Single_Prepare(lv_event_t * e)
 		{
 			lv_timer_resume(SingleTimer);
 			
-			Serial.println("SingleTimer resumed");
+			//Serial.println("SingleTimer resumed");
 		}
 		else 
 		{
 			SingleTimer = lv_timer_create(SingleUpdateTimer, 500,  &user_data);
-			Serial.println("SingleTimer created");
+			//Serial.println("SingleTimer created");
 		}
 
 		Serial.println((unsigned)SingleTimer);
@@ -358,7 +356,7 @@ void Ui_Single_Leave(lv_event_t * e)
 	lv_timer_del(SingleTimer);
 	SingleTimer = NULL;
 
-	Serial.println("SingleTimer deleted");
+	//Serial.println("SingleTimer deleted");
     	int Pos = 0;
 
 	if (CompThingArray[Pos]) 

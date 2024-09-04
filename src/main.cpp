@@ -387,7 +387,7 @@ bool ToggleSwitch(PeriphClass *Periph)
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }*/
 
-void SendCommand(PeerClass *P, int Cmd, String Value = "") {
+void SendCommand(PeerClass *P, int Cmd, String Value) {
   JsonDocument doc; String jsondata; 
   
   doc["from"]  = Self.GetName();   

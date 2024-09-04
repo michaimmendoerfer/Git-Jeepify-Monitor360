@@ -32,13 +32,13 @@ int PeerCount;
 Preferences preferences;
 uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
-struct ConfirmStruct {
+/*struct ConfirmStruct {
     uint8_t Address[6];
     String Message;
     int Try;
 };
 MyLinkedList<ConfirmStruct*> ConfirmList = MyLinkedList<ConfirmStruct*>();
-
+*/
 PeerClass Self;
 
 String jsondataBuf;
@@ -53,6 +53,8 @@ volatile uint32_t TSMsgVolt = 0;
 volatile uint32_t TSMsgEich = 0;
 volatile uint32_t TSMsgPair = 0;
 volatile uint32_t TSPair    = 0;
+
+volatile uint32_t TSConfirm = 0;
 
 lv_timer_t *WDButtonVars;
 
@@ -453,15 +455,29 @@ bool TogglePairMode() {
 }
 void CalibVolt() {
   JsonDocument doc; String jsondata;
- 
+  TSConfirm = millis();
+    
   doc["Node"]  = Self.GetName();  
   doc["Order"] = SEND_CMD_VOLTAGE_CALIB;
   doc["NewVoltage"] = lv_textarea_get_text(ui_TxtVolt);
+  doc["ConfirmTS"] = TSConfirm;
   
   serializeJson(doc, jsondata);  
 
   esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
-  if (Self.GetDebugMode()) Serial.println(jsondata);
+  
+  if (ActivePeer->GetConfirm())
+  {
+      uint32_t TempConfirm = TSConfirm;
+      for (int i=0; i<10; i++)
+      {
+          if (TSConfirm == 0) exit;
+          delay(100);
+          esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
+      }
+      TSConfirm = 0;
+  }
+    if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 void PrintMAC(const uint8_t * mac_addr){
   char macStr[18];
@@ -473,10 +489,24 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     if (Self.GetDebugMode()) {
         if (Self.GetDebugMode()) 
         {
-            Serial.print("\r\nLast Packet Send Status:\t");
+            Serial.print("Last Packet Send Status: ");
             Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+            
+            if (TSConfirm) 
+            {   
+                char *PeerName = FindPeerByMac(mac_addr)->GetName());
+            
+                if (status == ESP_NOW_SEND_SUCCESS)
+                {
+                    Serial.printf("Message (%d) confirmed from %s\n\r", TSConfirm, PeerName);
+                    TSConfirm = 0;
+                }
+                else 
+                {
+                    Serial.printf("Message (%d) NOT confirmed from %s\n\r", TSConfirm, PeerName);
+                }
+            }
         }
-    }
 }
 
 #pragma endregion Other

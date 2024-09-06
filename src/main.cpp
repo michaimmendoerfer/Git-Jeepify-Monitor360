@@ -212,15 +212,13 @@ void setup()
     Self.Setup(_Name, MONITOR_ROUND, _Version, broadcastAddressAll, false, true, false, false);
     
     #ifdef KILL_NVS
-        nvs_flash_erase(); nvs_flash_init(); ESP.restart();
+        nvs_flash_erase(); nvs_flash_init();
         while(1)
         {}
     #endif
-    //TFT & LVGL
-
-    WiFi.mode(WIFI_AP_STA);
-    //ESP-Now
     
+    WiFi.mode(WIFI_AP_STA);
+
     if (esp_now_init() != ESP_OK) { Serial.println("Error initializing ESP-NOW"); return; }
 
     esp_now_register_send_cb(OnDataSent);
@@ -241,7 +239,6 @@ void setup()
     lv_timer_t * TimerPing = lv_timer_create(SendPing, PING_INTERVAL,  &user_data);
 
     ui_init(); 
-    Serial.println("Setup ende...");
 }
 void loop() 
 {
@@ -324,12 +321,8 @@ void SendPairingConfirm(PeerClass *P) {
   doc["Peer"]     = P->GetName();
   doc["Order"]    = SEND_CMD_YOU_ARE_PAIRED;
   doc["Type"]     = Self.GetType();
-  doc["B0"]       = (uint8_t)Broadcast[0];
-  doc["B1"]       = (uint8_t)Broadcast[1];
-  doc["B2"]       = (uint8_t)Broadcast[2];
-  doc["B3"]       = (uint8_t)Broadcast[3];
-  doc["B4"]       = (uint8_t)Broadcast[4];
-  doc["B5"]       = (uint8_t)Broadcast[5];
+  doc["B0"]       = (uint8_t)Broadcast[0]; doc["B1"] = (uint8_t)Broadcast[1]; doc["B2"] = (uint8_t)Broadcast[2];
+  doc["B3"]       = (uint8_t)Broadcast[3]; doc["B4"] = (uint8_t)Broadcast[4]; doc["B5"] = (uint8_t)Broadcast[5];
 
   serializeJson(doc, jsondata);  
   
@@ -482,6 +475,32 @@ void CalibVolt() {
     }
         if (Self.GetDebugMode()) Serial.println(jsondata);
 }
+void CalibAmp() {
+  JsonDocument doc; String jsondata;
+  TSConfirm = millis();
+
+  doc["Node"]  = Self.GetName();  
+  doc["Order"] = SEND_CMD_CURRENT_CALIB;
+  doc["ConfirmTS"] = TSConfirm;
+  
+  serializeJson(doc, jsondata);  
+
+  esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
+  
+  if (ActivePeer->GetConfirm())
+  {
+      uint32_t TempConfirm = TSConfirm;
+      for (int i=0; i<10; i++)
+      {
+          if (TSConfirm == 0) exit;
+          delay(100);
+          esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
+      }
+      TSConfirm = 0;
+  }
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+}
+
 void PrintMAC(const uint8_t * mac_addr){
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",

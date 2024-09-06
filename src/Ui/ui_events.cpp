@@ -835,8 +835,10 @@ void Keyboard_cb(lv_event_t * event)
 #pragma region System_Eichen
 void Ui_Eichen_Start(lv_event_t * e)
 {
-	SendCommand(ActivePeer, SEND_CMD_CURRENT_CALIB);
 	TSMsgSnd = millis();
+	//SendCommand(ActivePeer, SEND_CMD_CURRENT_CALIB);
+	CalibAmp();
+	
 	_ui_screen_change(&ui_ScrMenu, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrMenu_screen_init);
 }
 

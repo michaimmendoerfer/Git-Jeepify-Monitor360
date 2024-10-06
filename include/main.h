@@ -34,6 +34,7 @@ bool   ToggleDebugMode();
 bool   TogglePairMode();
 
 void   CalibVolt();
+void   CalibAmp();
 void   PrepareJSON();
 void   PrintMAC(const uint8_t * mac_addr);
 void   WriteStringToCharArray(String S, char *C);

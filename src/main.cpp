@@ -33,10 +33,13 @@ Preferences preferences;
 uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 struct ConfirmStruct {
-    uint8_t Address[6];
-    String Message;
-    int Try;
+    uint8_t  Address[6];
+    String   Message;
+    uint32_t TSMessage;
+    int      Try;
+    bool     Confirmed;
 };
+
 MyLinkedList<ConfirmStruct*> ConfirmList = MyLinkedList<ConfirmStruct*>();
 
 PeerClass Self;
@@ -114,7 +117,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     SaveNeeded = true;
                     P->Setup(PeerName.c_str(), (int)doc["Type"], PeerVersion.c_str(), info->src_addr, 
                         (bool) bitRead(Status, 1), (bool) bitRead(Status, 0), (bool) bitRead(Status, 2), (bool) bitRead(Status, 3));
-                    P->SetConfirm(bitRead(Status, 4));
+                    //P->SetConfirm(bitRead(Status, 4));
                 } 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
@@ -179,6 +182,22 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         P->SetDemoMode  ((bool) bitRead(Status, 2));
                         P->SetPairMode  ((bool) bitRead(Status, 3));
                     } 
+                    
+                    if (doc.containsKey("TSConfirm"))
+                    {
+                        uint32_t TempTS;
+                        TempTS = (uint32_t) doc["TSConfirm"];
+                        for (int i=0; i<ConfirmList.size(); i++)
+                        {
+                            ConfirmStruct *TempConfirm;
+                            TempConfirm = ConfirmList.get(i);
+                            if (TempConfirm->TSMessage == TempTS)
+                            {
+                                TempConfirm->Confirmed = true;
+                            }
+                        }
+
+                    }
                 } 
             }
         } 
@@ -248,28 +267,24 @@ void loop()
 #pragma endregion Main
 
 #pragma region Send-Things
-esp_err_t  JeepifySend(const uint8_t *peer_addr, const uint8_t *data, size_t len, bool ConfirmNeeded = false)
+esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, bool ConfirmNeeded = false)
 {
-    esp_err_t SendStatus = esp_now_send(peer_addr, data, len);
+    esp_err_t SendStatus = esp_now_send(P->GetBroadcastAddress(), data, len);
+    
     Serial.printf("SendStatus was %d, ConfirmNeeded = %d\n\r", SendStatus, ConfirmNeeded);
-    if ((SendStatus != ESP_OK) and (ConfirmNeeded))
+    if (ConfirmNeeded)
     {   
-        PeerClass *P = FindPeerByMAC(peer_addr);
+        ConfirmStruct *Confirm = new ConfirmStruct;
+        memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);
+        char* buff = (char*) data;   
+        Confirm->Message = (String) buff;
+        Confirm->TSMessage = millis();
+        
+        Confirm->Try = 1;
 
-        if (P->GetConfirm())
-        {
-            ConfirmStruct *Confirm = new ConfirmStruct;
-            for (int i=0 ; i<6; i++) Confirm->Address[i] = peer_addr[i];
-            
-            char* buff = (char*) data;   
-            Confirm->Message = (String) buff;
-            
-            Confirm->Try = 1;
+        ConfirmList.add(Confirm);
 
-            ConfirmList.add(Confirm);
-
-            Serial.printf("added Msg: %s to ConfirmList\n\r", Confirm->Message, Confirm->Try);   
-        }
+        Serial.printf("added Msg: %s to ConfirmList\n\r", Confirm->Message, Confirm->Try);   
     }
     return SendStatus;
 }
@@ -294,22 +309,33 @@ void SendPing(lv_timer_t * timer) {
         if (P->GetType() > 0) esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
     }
 
-    /*if (ConfirmList.size() > 0)
+    if (ConfirmList.size() > 0)
     { 
         for (int i=ConfirmList.size()-1; i>=0; i--)
         {
             ConfirmStruct *Confirm = ConfirmList.get(i);
             Confirm->Try++;
-            esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message.c_str(), 200); 
-            Serial.printf("reSending Msg: %s from ConfirmList Try: %d --> %d\n\r", Confirm->Message, Confirm->Try, SendStatus);
-            if ((SendStatus == ESP_OK) or (Confirm->Try == 11));
+            
+            if (Confirm->Confirmed == true)
             {
-                Serial.printf("deleted Msg: %s from ConfirmList after %d tries\n\r", Confirm->Message, Confirm->Try);
+                Serial.printf("deleted Msg: %s(%d) from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
                 delete Confirm;
                 ConfirmList.remove(i);
             }
+            else if (Confirm->Try == 11)
+            {
+                Serial.printf("deleted Msg: %s(%d) from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
+                delete Confirm;
+                ConfirmList.remove(i);
+            }
+            else
+            {
+                Serial.printf("reSending Msg: %s(%d) from ConfirmList Try: %d\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
+                esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message.c_str(), 200); 
+            }
+            
         }
-    }*/
+    }
     
 }
 void SendPairingConfirm(PeerClass *P) {
@@ -357,31 +383,6 @@ bool ToggleSwitch(PeriphClass *Periph)
     
     return true;
 }
-/*void SendCommand(PeerClass *P, String Cmd) {
-  JsonDocument doc; String jsondata; 
-  
-  doc["from"]  = Self.GetName();   
-  doc["Order"] = Cmd;
-  
-  serializeJson(doc, jsondata);  
-  
-  TSMsgSnd = millis();
-  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-  if (Self.GetDebugMode()) Serial.println(jsondata);
-}*/
-/*void SendCommand(PeerClass *P, int Cmd) {
-  JsonDocument doc; String jsondata; 
-  
-  doc["from"]  = Self.GetName();   
-  doc["Order"] = Cmd;
-  
-  serializeJson(doc, jsondata);  
-  
-  TSMsgSnd = millis();
-  esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-  if (Self.GetDebugMode()) Serial.println(jsondata);
-}*/
-
 void SendCommand(PeerClass *P, int Cmd, String Value) {
   JsonDocument doc; String jsondata; 
   
@@ -396,7 +397,6 @@ void SendCommand(PeerClass *P, int Cmd, String Value) {
   if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 #pragma endregion Send-Things
-
 #pragma region System-Screens
 void PrepareJSON() {
   if (jsondataBuf) {
@@ -411,10 +411,10 @@ void PrepareJSON() {
 }
 #pragma endregion System-Screens
 #pragma region Other
-void WriteStringToCharArray(String S, char *C) {
+/*void WriteStringToCharArray(String S, char *C) {
   int   ArrayLength = S.length()+1;    //The +1 is for the 0x00h Terminator
   S.toCharArray(C,ArrayLength);
-}
+}*/
 bool ToggleSleepMode() 
 {
     preferences.begin("JeepifyInit", false);
@@ -448,56 +448,29 @@ bool TogglePairMode() {
 }
 void CalibVolt() {
     JsonDocument doc; String jsondata;
-    if (ActivePeer->GetConfirm()) 
-    {
-        TSConfirm = millis();
-        doc["ConfirmTS"] = TSConfirm;
-    }
-
+    
     doc["Node"]  = Self.GetName();  
     doc["Order"] = SEND_CMD_VOLTAGE_CALIB;
     doc["NewVoltage"] = lv_textarea_get_text(ui_TxtVolt);
+    doc["TSConfirm"] = millis();
     
     serializeJson(doc, jsondata);  
 
-    esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
+    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, true);  
     
-    if (ActivePeer->GetConfirm())
-    {
-        uint32_t TempConfirm = TSConfirm;
-        for (int i=0; i<10; i++)
-        {
-            if (TSConfirm == 0) exit;
-            delay(100);
-            esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
-        }
-        TSConfirm = 0;
-    }
-        if (Self.GetDebugMode()) Serial.println(jsondata);
+    if (Self.GetDebugMode()) Serial.println(jsondata);
 }
-void CalibAmp() {
-  JsonDocument doc; String jsondata;
-  TSConfirm = millis();
+void CalibAmp() 
+{
+    JsonDocument doc; String jsondata;
 
-  doc["Node"]  = Self.GetName();  
-  doc["Order"] = SEND_CMD_CURRENT_CALIB;
-  doc["ConfirmTS"] = TSConfirm;
-  
-  serializeJson(doc, jsondata);  
+    doc["Node"]  = Self.GetName();  
+    doc["Order"] = SEND_CMD_CURRENT_CALIB;
+    doc["TSConfirm"] = millis();
+    
+    serializeJson(doc, jsondata);  
+    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, true);  
 
-  esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
-  
-  if (ActivePeer->GetConfirm())
-  {
-      uint32_t TempConfirm = TSConfirm;
-      for (int i=0; i<10; i++)
-      {
-          if (TSConfirm == 0) exit;
-          delay(100);
-          esp_now_send(ActivePeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
-      }
-      TSConfirm = 0;
-  }
     if (Self.GetDebugMode()) Serial.println(jsondata);
 }
 
@@ -513,19 +486,13 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
         Serial.print("Last Packet Send Status: ");
         Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
         
-        if (TSConfirm) 
-        {   
-            char *PeerName = FindPeerByMAC(mac_addr)->GetName();
-        
-            if (status == ESP_NOW_SEND_SUCCESS)
-            {
-                Serial.printf("Message (%d) confirmed from %s\n\r", TSConfirm, PeerName);
-                TSConfirm = 0;
-            }
-            else 
-            {
-                Serial.printf("Message (%d) NOT confirmed from %s\n\r", TSConfirm, PeerName);
-            }
+        if (status == ESP_NOW_SEND_SUCCESS)
+        {
+            Serial.println("Message send SUCCESS");
+        }
+        else 
+        {
+            Serial.println("Message send FAILED");
         }
     }
 }

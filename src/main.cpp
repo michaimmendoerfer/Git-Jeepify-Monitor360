@@ -24,9 +24,18 @@ const char _Protokoll_Version[] = "1.10";
 #include "Ui\ui.h"
 #include "Ui\ui_events.h" 
 #include <nvs_flash.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #pragma endregion Includes
 
 #pragma region Globals
+
+char *ArrType[MAX_PERIPHERALS] = {"T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"};
+char *ArrName[MAX_PERIPHERALS] = {"N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"};
+char *ArrBrother[MAX_PERIPHERALS] = {"B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"};
+char *ArrNullwert[MAX_PERIPHERALS] = {"NW0", "NW1", "NW2", "NW3", "NW4", "NW5", "NW6", "NW7", "NW8"};
+char *ArrVperAmp[MAX_PERIPHERALS] = {"VpA0", "VpA1", "VpA2", "VpA3", "VpA4", "VpA5", "VpA6", "VpA7", "VpA8"};
+char *ArrVin[MAX_PERIPHERALS] = {"Vin0", "Vin1", "Vin2", "Vin3", "Vin4", "Vin5", "Vin6", "Vin7", "Vin8"};
 
 int PeerCount;
 Preferences preferences;
@@ -63,8 +72,352 @@ lv_timer_t *WDButtonVars;
 
 int ActiveMultiScreen;
 bool WebServerActive = true;
-
 #pragma endregion Globals
+
+#pragma region WebServer
+AsyncWebServer server(80);
+const char* ssid = "Jeepify_Monitor";
+const char* password = "";
+
+const char* PARAM_MESSAGE = "message";
+
+PeerClass   *ActiveWebPeer = NULL;
+PeriphClass *ActiveWebPeriph = NULL;
+
+const char index_html[] PROGMEM = R"rawliteral(
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP32 Form</title>
+<style>
+body{ margin: 0;padding: 0;font-family: Arial, Helvetica, sans-serif;background-color: #2c257a;}
+.box{ width: 70%%; padding: 40px; position: absolute; top: 50%%; left: 50%%; transform: translate(-50%%,-50%%); background-color: #191919; color: white; text-align: center; border-radius: 24px; box-shadow: 0px 1px 32px 0px rgba(0,227,197,0.59);}
+h1{ text-transform: uppercase; font-weight: 500;}
+input{ border: 0; display: block; background: none; margin: 20px auto; text-align: center; border: 2px solid #4834d4; padding: 14px 10px; width: 30%%; outline: none; border-radius: 24px; color: white; font-size: smaller; transition: 0.3s;}
+input:focus{ width: 90%%; border-color:#22a6b3 ;}
+input[type='submit']{ border: 0; display: block; background: none; margin: 20px auto; text-align: center; border: 2px solid #22a6b3; padding: 14px 10px; width: 90px; outline: none; border-radius: 24px; color: white; transition: 0.3s; cursor: pointer;}
+input[type='submit']:hover{ background-color: #22a6b3;}
+</style>
+</head>
+<body>
+<form action="/get" class="box" id="values">
+<h1>Settings (%PeerName%)</h1>
+<div class="part">
+<input name="PeerName" type="text" placeholder="%PeerName%">
+</div>
+<div class="part">
+<input name="PeriphName" type="%TYPE%" placeholder="%PeriphName%">
+</div>
+<div class="part">
+<input name="Nullwert" type="%TYPE%" placeholder="%Nullwert%">
+</div>
+<div class="part">
+<input name="VperAmp" type="%TYPE%" placeholder="%VperAmp%">
+</div>
+<div class="part">
+<input name="Vin" type="%TYPE%" placeholder="%Vin%">
+<input type="submit" name="message" value="upd module" />
+</div>
+<div class="part">
+<table align=center>
+  <tr>
+    <td><div class="part"><input type="submit" name="message" value="prev" /></div></td>
+    <td><div class="part"><input type="submit" name="message" value="module" /></div></td>
+    <td><div class="part"><input type="submit" name="message" value="next" /></div></td>
+  </tr>
+</table>
+</div>
+</form>
+</body></html>
+)rawliteral";
+
+void notFound(AsyncWebServerRequest *request) {
+  request->send(404, "text/plain", "Not found");
+}
+
+String processor(const String& var)
+{
+    char Buf[10];
+    
+    if (var == "TYPE")        if (ActiveWebPeriph) return "text";
+                              else return "hidden";
+    if (var == "PeerName")    return ActiveWebPeer->GetName();
+    if (var == "PeriphName")  if (ActiveWebPeriph) return ActiveWebPeriph->GetName();
+    if (var == "Nullwert")    if (ActiveWebPeriph) { dtostrf(ActiveWebPeriph->GetNullwert(), 0, 3, Buf); return String(Buf); }
+    if (var == "VperAmp")     if (ActiveWebPeriph) { dtostrf(ActiveWebPeriph->GetVperAmp(), 0, 3, Buf); return String(Buf); }
+    if (var == "Vin")         if (ActiveWebPeriph) return String(ActiveWebPeriph->GetVin());
+    
+    return String();
+}
+bool SendWebPeriphNameChange()
+{
+    JsonDocument doc; String jsondata; 
+
+    doc["from"]    = NODE_NAME;   
+    doc["Order"]   = SEND_CMD_UPDATE_NAME;
+    doc["NewName"] = ActiveWebPeriph->GetName();
+    doc["Pos"]     = ActiveWebPeriph->GetPos();
+    
+    serializeJson(doc, jsondata);  
+    
+    TSMsgSnd = millis();
+    esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+
+    return true;
+}
+bool SendWebPeerNameChange()
+{
+    JsonDocument doc; String jsondata; 
+    
+    doc["from"]    = NODE_NAME;   
+    doc["Order"]   = SEND_CMD_UPDATE_NAME;
+    doc["NewName"] = ActiveWebPeer->GetName();
+    doc["Pos"]     = 99;
+    
+    serializeJson(doc, jsondata);  
+    
+    TSMsgSnd = millis();
+    esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+
+    return true;
+}
+bool SendWebVinChange()
+{
+    JsonDocument doc; String jsondata; 
+    
+    doc["from"]    = NODE_NAME;   
+    doc["Order"]   = SEND_CMD_UPDATE_VIN;
+    doc["Value"]   = ActiveWebPeriph->GetVin();
+    doc["Pos"]     = ActiveWebPeriph->GetPos();
+    
+    serializeJson(doc, jsondata);  
+    
+    TSMsgSnd = millis();
+    esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+
+    return true;
+}
+bool SendWebVperAmpChange()
+{
+    JsonDocument doc; String jsondata; 
+    
+    doc["from"]    = NODE_NAME;   
+    doc["Order"]   = SEND_CMD_UPDATE_VPERAMP;
+    doc["Value"]   = ActiveWebPeriph->GetVperAmp();
+    doc["Pos"]     = ActiveWebPeriph->GetPos();
+    
+    serializeJson(doc, jsondata);  
+    
+    TSMsgSnd = millis();
+    esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+
+    return true;
+}
+bool SendWebNullwertChange()
+{
+    JsonDocument doc; String jsondata; 
+    
+    doc["from"]    = NODE_NAME;   
+    doc["Order"]   = SEND_CMD_UPDATE_NULLWERT;
+    doc["Value"]   = ActiveWebPeriph->GetNullwert();
+    doc["Pos"]     = ActiveWebPeriph->GetPos();
+    
+    serializeJson(doc, jsondata);  
+    
+    TSMsgSnd = millis();
+    esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
+    if (Self.GetDebugMode()) Serial.println(jsondata);
+
+    return true;
+}
+
+void InitWebServer()
+{
+    Serial.printf("create AP = %d", WiFi.softAP(ssid, password));
+    WiFi.setTxPower(WIFI_POWER_8_5dBm);
+    int txPower = WiFi.getTxPower();
+    Serial.print("TX power: ");
+    Serial.println(txPower);
+
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("AP IP address: ");
+    Serial.println(IP);
+    
+    ActiveWebPeer = &Self;
+    ActiveWebPeriph = NULL;
+    
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+        request->send_P(200, "text/html", index_html, processor);
+    });
+    
+    server.on("/get", HTTP_GET, [] (AsyncWebServerRequest *request) {
+        String message;
+        String WebBuffer;
+
+        bool SaveNeeded  = false;
+
+        if (request->hasParam(PARAM_MESSAGE)) {
+            message = request->getParam(PARAM_MESSAGE)->value();
+            if (message == "update module") 
+            {
+                if (request->hasParam("PeerName"))
+                {
+                  WebBuffer = request->getParam("PeerName")->value();
+                  if (WebBuffer != "")
+                    { 
+                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewPeerName = %s\n\r", WebBuffer.c_str());  
+                        if (ActiveWebPeer) 
+                        {   
+                            SaveNeeded = true;
+                            ActiveWebPeer->SetName(WebBuffer.c_str());
+                            if (ActiveWebPeer != &Self) SendWebPeerNameChange();
+                        }
+                    }
+                }
+                
+                if (request->hasParam("PeriphName"))
+                {
+                  WebBuffer = request->getParam("PeriphName")->value();
+                  if (WebBuffer != "")
+                    { 
+                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewPeriphName = %s\n\r", WebBuffer.c_str());  
+                        if (ActiveWebPeriph) 
+                        {
+                            SaveNeeded = true;
+                            ActiveWebPeriph->SetName(WebBuffer.c_str());
+                            if (ActiveWebPeer != &Self) SendWebPeriphNameChange();
+                        }
+                    }
+                }
+
+                if (request->hasParam("Nullwert"))
+                {
+                  WebBuffer = request->getParam("Nullwert")->value();
+                  if (WebBuffer != "")
+                    { 
+                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewNullwert = %s\n\r", WebBuffer.c_str());  
+                        if (ActiveWebPeriph) 
+                        {
+                            SaveNeeded = true;
+                            ActiveWebPeriph->SetNullwert(atof(WebBuffer.c_str()));
+                            if (ActiveWebPeer != &Self) SendWebNullwertChange();
+                        }
+                    }
+                }
+                
+                if (request->hasParam("VperAmp"))
+                {
+                  WebBuffer = request->getParam("VperAmp")->value();
+                  if (WebBuffer != "")
+                    { 
+                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewVperAmp = %s\n\r", WebBuffer.c_str());  
+                        if (ActiveWebPeriph) 
+                        {
+                            SaveNeeded = true;
+                            ActiveWebPeriph->SetVperAmp(atof(WebBuffer.c_str()));
+                            if (ActiveWebPeer != &Self) SendWebVperAmpChange();
+                        }
+                    }
+                }
+                if (request->hasParam("Vin"))
+                {
+                  WebBuffer = request->getParam("Vin")->value();
+                  if (WebBuffer != "")
+                    { 
+                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewVin = %s\n\r", WebBuffer.c_str());  
+                        if (ActiveWebPeriph) 
+                        {
+                            SaveNeeded = true;
+                            ActiveWebPeriph->SetVperAmp(atoi(WebBuffer.c_str()));
+                            if (ActiveWebPeer != &Self) SendWebVinChange();
+                        }
+                    }
+                }  
+            }
+            
+            if (message == "module") 
+            {
+                if (Self.GetDebugMode()) Serial.println("Module aufgerufen");
+                ActiveWebPeer   = &Self;
+                ActiveWebPeriph = NULL;
+                Serial.printf("aktueller Name = %s\n\r", ActiveWebPeer->GetName());
+            }
+            if (message == "prev") 
+            {
+                if (Self.GetDebugMode()) Serial.println("Prev aufgerufen");
+                if (ActiveWebPeer == &Self) 
+                {
+                    PeerClass *TempP = FindFirstPeer(MODULE_ALL);
+                    if (TempP) ActiveWebPeer = TempP;
+                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL);  
+                }
+                else
+                {
+                    ActiveWebPeriph = FindPrevPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true);
+                    ActiveWebPeer   = FindPeerById(ActiveWebPeriph->GetPeerId());
+                }
+
+            }
+            if (message == "next") 
+            {
+                if (Self.GetDebugMode()) Serial.println("Next aufgerufen");
+                if (ActiveWebPeer == &Self) 
+                {
+                    PeerClass *TempP = FindFirstPeer(MODULE_ALL);
+                    if (TempP) ActiveWebPeer = TempP;
+                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL);  
+                }
+                else
+                {
+                    ActiveWebPeriph = FindNextPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true);
+                    ActiveWebPeer   = FindPeerById(ActiveWebPeriph->GetPeerId());
+                }
+            }
+        } else {
+            message = "No message sent";
+        }
+        request->send_P(200, "text/html", index_html, processor);
+        
+        if (SaveNeeded)
+        {   
+            if (ActiveWebPeer != &Self) SavePeers();
+            else 
+            {
+                preferences.begin("JeepifyInit", false);
+                preferences.putString("ModuleName", Self.GetName());
+                preferences.end();
+                Serial.println("Neuer Module Name gespeichert");
+            }
+            SaveNeeded = false;
+        }
+    });
+
+  server.onNotFound(notFound);
+}
+void ToggleWebServer()
+{   
+    WebServerActive = !WebServerActive;
+    if (WebServerActive) 
+    {
+        ActiveWebPeer = PeerList.get(0);
+        ActiveWebPeriph = PeriphList.get(0);
+        Serial.println("Server startet");
+        server.begin();
+    }
+    else 
+    {
+        Serial.println("Server beendet");
+        server.end();
+    }
+}
+#pragma endregion WebServer
+
 #pragma region Main
 void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int len)
 {
@@ -122,31 +475,26 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
-                    snprintf(Buf, sizeof(Buf), "T%d", Si);                          // Check for T0 (Type of Periph 0)
                     if (Self.GetDebugMode()) Serial.printf("Check Pairing for: %s\n\r", Buf);
                     
-                    if (doc.containsKey(Buf)) 
+                    int TempType = doc[ArrType[Si]]; 
+                    if (TempType)
                     {
                         if (Self.GetDebugMode()) Serial.printf("Pairing found: %s\n\r", Buf);       
-                        int  Type = doc[Buf];                                       // Set Periph[0].Type
+                        String PName = doc[ArrName[Si]];
 
-                        snprintf(Buf, sizeof(Buf), "N%d", Si);                      // get N0 (Name of Periph 0)
-                        String PName = doc[Buf];
-
-                        if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (Type != P->GetPeriphType(Si)))
+                        if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (TempType != P->GetPeriphType(Si)))
                         {
-                                P->PeriphSetup(Si, PName.c_str(), Type, false, false, 0, 0, 0, P->GetId());
+                                P->PeriphSetup(Si, PName.c_str(), TempType, false, false, 0, 0, 0, P->GetId());
                                 if (NewPeer) PeriphList.add(P->GetPeriphPtr(Si));
                                 SaveNeeded = true;
                                 if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
                         }
                     } 
                     
-                    snprintf(Buf, sizeof(Buf), "B%d", Si);                      // get B0 (Brother of Periph 0)
-                    if (doc.containsKey(Buf)) 
+                    int BrotherPos = (int) doc[ArrBrother[Si]];
+                    if (BrotherPos)
                     {
-                        int BrotherPos = (int) doc[Buf];
-
                         if (P->GetPeriphBrotherPos(Si) != BrotherPos)              
                         {
                             P->SetPeriphBrotherPos(Si, BrotherPos);
@@ -159,34 +507,34 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             }
             else // Peer known - no status-report, no pairing so read new values
             {
-                for (int i=0; i<MAX_PERIPHERALS; i++) 
+                for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
                 {
-                    if (doc.containsKey((const char*)P->GetPeriphName(i))) {
-                        float TempSensor = (float)doc[P->GetPeriphName(i)];
+                    float TempSensor = (float)doc[P->GetPeriphName(Si)];
+                    if (TempSensor)
+                    {
                         if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
                         //Serial.print(P->GetPeriphName(i)); Serial.print(" found = "); Serial.println(TempSensor);
                         
-                        if (TempSensor != P->GetPeriphValue(i)) {
-                            P->SetPeriphOldValue(i, P->GetPeriphValue(i));
-                            P->SetPeriphValue(i, TempSensor);
-                            P->SetPeriphChanged(i, true);
+                        if (TempSensor != P->GetPeriphValue(Si)) {
+                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si));
+                            P->SetPeriphValue(Si, TempSensor);
+                            P->SetPeriphChanged(Si, true);
                         }
-                        else P->SetPeriphChanged(i, false);
+                        else P->SetPeriphChanged(Si, false);
                     }
 
-                    if (doc.containsKey("Status")) 
+                    int Status = doc["Status"];
+                    if (Status)
                     {
-                        int Status = doc["Status"];
                         P->SetDebugMode ((bool) bitRead(Status, 0));
                         P->SetSleepMode ((bool) bitRead(Status, 1));
                         P->SetDemoMode  ((bool) bitRead(Status, 2));
                         P->SetPairMode  ((bool) bitRead(Status, 3));
                     } 
                     
-                    if (doc.containsKey("TSConfirm"))
+                    uint32_t TempTS = (uint32_t) doc["TSConfirm"];
+                    if (TempTS)
                     {
-                        uint32_t TempTS;
-                        TempTS = (uint32_t) doc["TSConfirm"];
                         for (int i=0; i<ConfirmList.size(); i++)
                         {
                             ConfirmStruct *TempConfirm;
@@ -196,8 +544,16 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                                 TempConfirm->Confirmed = true;
                             }
                         }
-
                     }
+
+                    float TempNullWert = doc[ArrNullwert[Si]];
+                    if (TempNullWert) P->SetPeriphNullwert(Si, TempNullWert);
+                    
+                    float TempVperAmp = doc[ArrVperAmp[Si]];
+                    if (TempVperAmp) P->SetPeriphVperAmp(Si, TempVperAmp);
+                    
+                    float TempVin = doc[ArrVin[Si]];
+                    if (TempVin) P->SetPeriphVin(Si, TempVin);
                 } 
             }
         } 

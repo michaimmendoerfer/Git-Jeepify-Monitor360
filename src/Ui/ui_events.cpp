@@ -129,7 +129,7 @@ void Ui_Peer_Delete(lv_event_t * e)
 #pragma region Screen_Settings
 void Ui_Set_WebSvr(lv_event_t * e)
 {
-	//ToggleWebServer();
+	ToggleWebServer();
 }
 
 void Ui_Set_Prepare(lv_event_t * e)

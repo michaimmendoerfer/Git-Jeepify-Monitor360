@@ -240,7 +240,7 @@ bool SendWebNullwertChange()
 void InitWebServer()
 {
     Serial.printf("create AP = %d", WiFi.softAP(ssid, password));
-    WiFi.setTxPower(WIFI_POWER_8_5dBm);
+    //WiFi.setTxPower(WIFI_POWER_8_5dBm);
     int txPower = WiFi.getTxPower();
     Serial.print("TX power: ");
     Serial.println(txPower);
@@ -264,7 +264,7 @@ void InitWebServer()
 
         if (request->hasParam(PARAM_MESSAGE)) {
             message = request->getParam(PARAM_MESSAGE)->value();
-            if (message == "update module") 
+            if (message == "upd module") 
             {
                 if (request->hasParam("PeerName"))
                 {

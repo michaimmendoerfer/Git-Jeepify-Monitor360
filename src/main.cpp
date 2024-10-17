@@ -30,9 +30,9 @@ const char _Protokoll_Version[] = "1.10";
 
 #pragma region Globals
 
-char *ArrType[MAX_PERIPHERALS] = {"T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"};
-char *ArrName[MAX_PERIPHERALS] = {"N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"};
-char *ArrBrother[MAX_PERIPHERALS] = {"B0", "B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"};
+char *T[MAX_PERIPHERALS] = {"T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"};
+char *N[MAX_PERIPHERALS] = {"N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"};
+char *B[MAX_PERIPHERALS] = {"Br0", "Br1", "Br2", "Br3", "Br4", "B5r", "B6r", "B7r", "B8r"};
 char *ArrNullwert[MAX_PERIPHERALS] = {"NW0", "NW1", "NW2", "NW3", "NW4", "NW5", "NW6", "NW7", "NW8"};
 char *ArrVperAmp[MAX_PERIPHERALS] = {"VpA0", "VpA1", "VpA2", "VpA3", "VpA4", "VpA5", "VpA6", "VpA7", "VpA8"};
 char *ArrVin[MAX_PERIPHERALS] = {"Vin0", "Vin1", "Vin2", "Vin3", "Vin4", "Vin5", "Vin6", "Vin7", "Vin8"};
@@ -477,11 +477,11 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
                     if (Self.GetDebugMode()) Serial.printf("Check Pairing for: %s\n\r", Buf);
                     
-                    int TempType = doc[ArrType[Si]]; 
+                    int TempType = doc[T[Si]]; 
                     if (TempType)
                     {
                         if (Self.GetDebugMode()) Serial.printf("Pairing found: %s\n\r", Buf);       
-                        String PName = doc[ArrName[Si]];
+                        String PName = doc[N[Si]];
 
                         if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (TempType != P->GetPeriphType(Si)))
                         {
@@ -492,7 +492,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         }
                     } 
                     
-                    int BrotherPos = (int) doc[ArrBrother[Si]];
+                    int BrotherPos = (int) doc[B[Si]];
                     if (BrotherPos)
                     {
                         if (P->GetPeriphBrotherPos(Si) != BrotherPos)              

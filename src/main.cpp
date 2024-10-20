@@ -44,7 +44,7 @@ uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 struct ConfirmStruct {
     uint8_t  Address[6];
     char     Message[250];
-    uint32_t TSMessage;
+    volatile uint32_t TSMessage;
     int      Try;
     bool     Confirmed;
 };
@@ -240,7 +240,7 @@ bool SendWebNullwertChange()
 void InitWebServer()
 {
     Serial.printf("create AP = %d", WiFi.softAP(ssid, password));
-    //WiFi.setTxPower(WIFI_POWER_8_5dBm);
+    WiFi.setTxPower(WIFI_POWER_8_5dBm);
     int txPower = WiFi.getTxPower();
     Serial.print("TX power: ");
     Serial.println(txPower);
@@ -456,7 +456,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         if (P)      // Peer bekannt
         { 
             P->SetTSLastSeen(millis());
-            if (Self.GetDebugMode()) Serial.printf("bekannter Node: %s - LastSeen at %d\n\r", P->GetName(), P->GetTSLastSeen());
+            if (Self.GetDebugMode()) Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
 
             // first time register periphs or periodically check if changed - save if needed
             if (Order == SEND_CMD_PAIR_ME) 
@@ -531,25 +531,13 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         P->SetDemoMode  ((bool) bitRead(Status, 2));
                         P->SetPairMode  ((bool) bitRead(Status, 3));
                     } 
-                    
-                    uint32_t TempTS = (uint32_t) doc["TSConfirm"];
-                    if (TempTS)
-                    {
-                        Serial.printf("Confirm (%d) empfangen von %s\n\r", TempTS, P->GetName());
-                        for (int i=0; i<ConfirmList.size(); i++)
-                        {
-                            ConfirmStruct *TempConfirm;
-                            TempConfirm = ConfirmList.get(i);
-                            if (TempConfirm->TSMessage == TempTS)
-                            {
-                                TempConfirm->Confirmed = true;
-                                Serial.printf("Found at list[%d] - DELETED\n\r", i);
-                            }
-                        }
-                    }
 
                     float TempNullWert = doc[ArrNullwert[Si]];
-                    if (TempNullWert) P->SetPeriphNullwert(Si, TempNullWert);
+                    if (TempNullWert) 
+                    {
+                        P->SetPeriphNullwert(Si, TempNullWert);
+                        Serial.printf("%s[%d] gefunden. Wert ist: %.3f. %s->Nullwert = %.3f\n\r", ArrNullwert[Si], Si, TempNullWert, P->GetName(), P->GetPeriphNullwert(Si));
+                    }
                     
                     float TempVperAmp = doc[ArrVperAmp[Si]];
                     if (TempVperAmp) P->SetPeriphVperAmp(Si, TempVperAmp);
@@ -557,6 +545,23 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     float TempVin = doc[ArrVin[Si]];
                     if (TempVin) P->SetPeriphVin(Si, TempVin);
                 } 
+
+                uint32_t TempTS = (uint32_t) doc["TSConfirm"];
+                if (TempTS)
+                {
+                    Serial.printf("Confirm (%d) empfangen von %s\n\r", TempTS, P->GetName());
+                    for (int i=0; i<ConfirmList.size(); i++)
+                    {
+                        ConfirmStruct *TempConfirm;
+                        TempConfirm = ConfirmList.get(i);
+                    Serial.printf("empfangener TS ist: %d - durchsuchter TS (List[%d]) ist: %d\n\r", TempTS, i, TempConfirm->TSMessage);
+                    if (TempConfirm->TSMessage == TempTS)
+                        {
+                            TempConfirm->Confirmed = true;
+                            Serial.printf("Found at list[%d] - DELETED\n\r", i);
+                        }
+                    }
+                }
             }
         } 
         
@@ -576,13 +581,14 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
     {        
         Serial.print(F("deserializeJson() failed: ")); 
         Serial.println(error.f_str());
+        Serial.printf("jsondata was: %s\n\r", jsondata);
         return;
     }
 }
 
 void setup() 
 {
-    delay(200);
+    delay(2000);
     Serial.begin(115200);
     scr_lvgl_init();
 
@@ -595,7 +601,7 @@ void setup()
     #endif
     
     WiFi.mode(WIFI_AP_STA);
-
+    InitWebServer();
     if (esp_now_init() != ESP_OK) { Serial.println("Error initializing ESP-NOW"); return; }
 
     esp_now_register_send_cb(OnDataSent);
@@ -625,7 +631,7 @@ void loop()
 #pragma endregion Main
 
 #pragma region Send-Things
-esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, bool ConfirmNeeded = false)
+esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, uint32_t TSConfirm, bool ConfirmNeeded = false)
 {
     esp_err_t SendStatus = esp_now_send(P->GetBroadcastAddress(), data, len);
     
@@ -636,7 +642,7 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, bool Confi
         memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);
         strcpy(Confirm->Message, (const char *)data);
         Confirm->Confirmed = false;
-        Confirm->TSMessage = millis();
+        Confirm->TSMessage = TSConfirm;
         Confirm->Try = 1;
 
         ConfirmList.add(Confirm);
@@ -679,7 +685,7 @@ void SendPing(lv_timer_t * timer) {
                 delete Confirm;
                 ConfirmList.remove(i);
             }
-            else if (Confirm->Try == 11)
+            else if (Confirm->Try == 21)
             {
                 Serial.printf("deleted Msg: %s from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->Try);
                 delete Confirm;
@@ -687,7 +693,7 @@ void SendPing(lv_timer_t * timer) {
             }
             else
             {
-                Serial.printf("reSending Msg: %s from ConfirmList Try: %d\n\r", Confirm->Message, Confirm->Try);
+                Serial.printf("%d: reSending Msg: %s from ConfirmList Try: %d\n\r", millis(), Confirm->Message, Confirm->Try);
                 esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message, 200); 
             }
             
@@ -806,14 +812,16 @@ bool TogglePairMode() {
 void CalibVolt() {
     JsonDocument doc; String jsondata;
     
+    uint32_t TSConfirm = millis();
+
     doc["Node"]  = Self.GetName();  
     doc["Order"] = SEND_CMD_VOLTAGE_CALIB;
     doc["NewVoltage"] = lv_textarea_get_text(ui_TxtVolt);
-    doc["TSConfirm"] = millis();
+    doc["TSConfirm"] = TSConfirm;
     
     serializeJson(doc, jsondata);  
 
-    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, true);  
+    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, TSConfirm, true);  
     
     if (Self.GetDebugMode()) Serial.println(jsondata);
 }
@@ -821,12 +829,14 @@ void CalibAmp()
 {
     JsonDocument doc; String jsondata;
 
+    uint32_t TSConfirm = millis();
+
     doc["Node"]  = Self.GetName();  
     doc["Order"] = SEND_CMD_CURRENT_CALIB;
-    doc["TSConfirm"] = millis();
+    doc["TSConfirm"] = TSConfirm;
     
     serializeJson(doc, jsondata);  
-    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, true);  
+    JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, TSConfirm, true);  
 
     if (Self.GetDebugMode()) Serial.println(jsondata);
 }

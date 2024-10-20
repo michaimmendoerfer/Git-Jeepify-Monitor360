@@ -43,7 +43,7 @@ uint8_t broadcastAddressAll[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 struct ConfirmStruct {
     uint8_t  Address[6];
-    String   Message;
+    char     Message[250];
     uint32_t TSMessage;
     int      Try;
     bool     Confirmed;
@@ -535,6 +535,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     uint32_t TempTS = (uint32_t) doc["TSConfirm"];
                     if (TempTS)
                     {
+                        Serial.printf("Confirm (%d) empfangen von %s\n\r", TempTS, P->GetName());
                         for (int i=0; i<ConfirmList.size(); i++)
                         {
                             ConfirmStruct *TempConfirm;
@@ -542,6 +543,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                             if (TempConfirm->TSMessage == TempTS)
                             {
                                 TempConfirm->Confirmed = true;
+                                Serial.printf("Found at list[%d] - DELETED\n\r", i);
                             }
                         }
                     }
@@ -632,10 +634,9 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, bool Confi
     {   
         ConfirmStruct *Confirm = new ConfirmStruct;
         memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);
-        char* buff = (char*) data;   
-        Confirm->Message = (String) buff;
+        strcpy(Confirm->Message, (const char *)data);
+        Confirm->Confirmed = false;
         Confirm->TSMessage = millis();
-        
         Confirm->Try = 1;
 
         ConfirmList.add(Confirm);
@@ -674,20 +675,20 @@ void SendPing(lv_timer_t * timer) {
             
             if (Confirm->Confirmed == true)
             {
-                Serial.printf("deleted Msg: %s(%d) from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
+                Serial.printf("deleted Msg: %s from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->Try);
                 delete Confirm;
                 ConfirmList.remove(i);
             }
             else if (Confirm->Try == 11)
             {
-                Serial.printf("deleted Msg: %s(%d) from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
+                Serial.printf("deleted Msg: %s from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->Try);
                 delete Confirm;
                 ConfirmList.remove(i);
             }
             else
             {
-                Serial.printf("reSending Msg: %s(%d) from ConfirmList Try: %d\n\r", Confirm->Message, Confirm->TSMessage, Confirm->Try);
-                esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message.c_str(), 200); 
+                Serial.printf("reSending Msg: %s from ConfirmList Try: %d\n\r", Confirm->Message, Confirm->Try);
+                esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message, 200); 
             }
             
         }
@@ -839,8 +840,8 @@ void PrintMAC(const uint8_t * mac_addr){
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) { 
     if (Self.GetDebugMode()) 
     {
-        Serial.print("Last Packet Send Status: ");
-        Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+        //Serial.print("Last Packet Send Status: ");
+        //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
         
         if (status == ESP_NOW_SEND_SUCCESS)
         {

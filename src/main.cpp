@@ -6,9 +6,9 @@
 #define NODE_TYPE MONITOR_ROUND
 //#define KILL_NVS 1
 
-const char *_Version = "V 3.61";
+const char *_Version = "V 3.71";
 const char *_Name = "Monitor 360";
-const char _Protokoll_Version[] = "1.10";
+const char _Protokoll_Version[] = "1.20";
 
 #pragma region Includes
 #include <Arduino.h>
@@ -93,44 +93,50 @@ const char index_html[] PROGMEM = R"rawliteral(
 <title>ESP32 Form</title>
 <style>
 body{ margin: 0;padding: 0;font-family: Arial, Helvetica, sans-serif;background-color: #2c257a;}
-.box{ width: 70%%; padding: 40px; position: absolute; top: 50%%; left: 50%%; transform: translate(-50%%,-50%%); background-color: #191919; color: white; text-align: center; border-radius: 24px; box-shadow: 0px 1px 32px 0px rgba(0,227,197,0.59);}
+.box{ width: 70%%; padding: 10px; position: absolute; top: 50%%; left: 50%%; transform: translate(-50%%,-50%%); background-color: #191919; color: white; text-align: center; border-radius: 24px; box-shadow: 0px 1px 32px 0px rgba(0,227,197,0.59);}
 h1{ text-transform: uppercase; font-weight: 500;}
-input{ border: 0; display: block; background: none; margin: 20px auto; text-align: center; border: 2px solid #4834d4; padding: 14px 10px; width: 30%%; outline: none; border-radius: 24px; color: white; font-size: smaller; transition: 0.3s;}
-input:focus{ width: 90%%; border-color:#22a6b3 ;}
-input[type='submit']{ border: 0; display: block; background: none; margin: 20px auto; text-align: center; border: 2px solid #22a6b3; padding: 14px 10px; width: 90px; outline: none; border-radius: 24px; color: white; transition: 0.3s; cursor: pointer;}
+input{ border: 0; background: none; margin: 20px auto; text-align: center; border: 2px solid #4834d4; padding: 14px 10px; width: 40%%; outline: none; border-radius: 24px; color: white; font-size: smaller; transition: 0.3s;}
+input:focus{ width: 40%%; border-color:#22a6b3 ;}
+input[type='submit']{ border: 0;background: none; margin: 20px auto; text-align: center; border: 2px solid #22a6b3; padding: 14px 10px; width: 120px; outline: none; border-radius: 24px; color: white; transition: 0.3s; cursor: pointer;}
 input[type='submit']:hover{ background-color: #22a6b3;}
 </style>
 </head>
 <body>
-<form action="/get" class="box" id="values">
-<h1>Settings (%PeerName%)</h1>
+<p>&nbsp;</p>
+<form id="values" class="box" action="/get">
+<h1>%PeerName%</h1>
+<div class="part"><input name="PeerName" type="text" placeholder="%PeerName%" />
+<input name="message" type="submit" value="UpdPeerName" /></div>
+
+<div class="part"><input name="PeriphName" type="%TYPE%" placeholder="%PeriphName%" />
+<input name="message" type="submit" value="UpdPeriphName" /></div>
+<div class="part"><input name="Nullwert" type="%TYPE%" placeholder="%Nullwert%" />
+<input name="message" type="submit" value="UpdNullwert" /></div>
+<div class="part"><input name="VperAmp" type="%TYPE%" placeholder="%VperAmp%" />
+<input name="message" type="submit" value="UpdVperAmp" /></div>
+<div class="part"><input name="Vin" type="%TYPE%" placeholder="%Vin%" />
+<input name="message" type="submit" value="UpdVin" /></div>
+
 <div class="part">
-<input name="PeerName" type="text" placeholder="%PeerName%">
-</div>
-<div class="part">
-<input name="PeriphName" type="%TYPE%" placeholder="%PeriphName%">
-</div>
-<div class="part">
-<input name="Nullwert" type="%TYPE%" placeholder="%Nullwert%">
-</div>
-<div class="part">
-<input name="VperAmp" type="%TYPE%" placeholder="%VperAmp%">
-</div>
-<div class="part">
-<input name="Vin" type="%TYPE%" placeholder="%Vin%">
-<input type="submit" name="message" value="upd module" />
-</div>
-<div class="part">
-<table align=center>
-  <tr>
-    <td><div class="part"><input type="submit" name="message" value="prev" /></div></td>
-    <td><div class="part"><input type="submit" name="message" value="module" /></div></td>
-    <td><div class="part"><input type="submit" name="message" value="next" /></div></td>
-  </tr>
+<table align="center">
+<tbody>
+<tr>
+<td>
+<div class="part"><input name="message" type="submit" value="module" /></div>
+</td>
+</tr>
+<tr>
+<td>
+<div class="part"><input name="message" type="submit" value="prev" /></div>
+</td>
+<td>
+<div class="part"><input name="message" type="submit" value="next" /></div>
+</td>
+</tr>
+</tbody>
 </table>
 </div>
-</form>
-</body></html>
+</form></body></html>
 )rawliteral";
 
 void notFound(AsyncWebServerRequest *request) {
@@ -264,7 +270,7 @@ void InitWebServer()
 
         if (request->hasParam(PARAM_MESSAGE)) {
             message = request->getParam(PARAM_MESSAGE)->value();
-            if (message == "upd module") 
+            if (message == "UpdPeerName") 
             {
                 if (request->hasParam("PeerName"))
                 {
@@ -280,7 +286,9 @@ void InitWebServer()
                         }
                     }
                 }
-                
+            }   
+            if (message == "UpdPeriphName") 
+            {    
                 if (request->hasParam("PeriphName"))
                 {
                   WebBuffer = request->getParam("PeriphName")->value();
@@ -295,7 +303,9 @@ void InitWebServer()
                         }
                     }
                 }
-
+            }
+            if (message == "UpdNullwert") 
+            {
                 if (request->hasParam("Nullwert"))
                 {
                   WebBuffer = request->getParam("Nullwert")->value();
@@ -310,7 +320,9 @@ void InitWebServer()
                         }
                     }
                 }
-                
+            }
+            if (message == "UpdVperAmp") 
+            {   
                 if (request->hasParam("VperAmp"))
                 {
                   WebBuffer = request->getParam("VperAmp")->value();
@@ -325,6 +337,9 @@ void InitWebServer()
                         }
                     }
                 }
+            }
+            if (message == "UpdVin") 
+            {
                 if (request->hasParam("Vin"))
                 {
                   WebBuffer = request->getParam("Vin")->value();
@@ -602,6 +617,10 @@ void setup()
     
     WiFi.mode(WIFI_AP_STA);
     InitWebServer();
+    
+    WebServerActive = !WebServerActive;
+    ToggleWebServer();
+
     if (esp_now_init() != ESP_OK) { Serial.println("Error initializing ESP-NOW"); return; }
 
     esp_now_register_send_cb(OnDataSent);
@@ -774,10 +793,6 @@ void PrepareJSON() {
 }
 #pragma endregion System-Screens
 #pragma region Other
-/*void WriteStringToCharArray(String S, char *C) {
-  int   ArrayLength = S.length()+1;    //The +1 is for the 0x00h Terminator
-  S.toCharArray(C,ArrayLength);
-}*/
 bool ToggleSleepMode() 
 {
     preferences.begin("JeepifyInit", false);

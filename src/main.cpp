@@ -655,7 +655,7 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, uint32_t T
     esp_err_t SendStatus = esp_now_send(P->GetBroadcastAddress(), data, len);
     
     Serial.printf("SendStatus was %d, ConfirmNeeded = %d\n\r", SendStatus, ConfirmNeeded);
-    if (ConfirmNeeded)
+    if (0) //if (ConfirmNeeded)
     {   
         ConfirmStruct *Confirm = new ConfirmStruct;
         memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);

@@ -501,6 +501,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (TempType != P->GetPeriphType(Si)))
                         {
                                 P->PeriphSetup(Si, PName.c_str(), TempType, false, false, 0, 0, 0, P->GetId());
+                                P->SetPeriphChanged(Si, true);
                                 if (NewPeer) PeriphList.add(P->GetPeriphPtr(Si));
                                 SaveNeeded = true;
                                 if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
@@ -527,7 +528,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                     float TempSensor = (float)doc[P->GetPeriphName(Si)];
                     if (TempSensor)
                     {
-                        if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
+                        //if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
                         //Serial.print(P->GetPeriphName(i)); Serial.print(" found = "); Serial.println(TempSensor);
                         
                         if (TempSensor != P->GetPeriphValue(Si)) {
@@ -688,6 +689,9 @@ void SendPing(lv_timer_t * timer) {
     for (int i=0; i<PeerList.size(); i++)
     {
         P = PeerList.get(i);
+        PrintMAC(P->GetBroadcastAddress());
+        Serial.printf(" - Sende Stay Alive an: %s\n\r", P->GetName());
+        
         if (P->GetType() > 0) esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
     }
 

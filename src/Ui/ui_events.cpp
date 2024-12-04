@@ -607,7 +607,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
         lv_indev_wait_release(lv_indev_get_act());
         Ui_Switch_Prev(e);
 	}
-	else if (event_code == LV_EVENT_CLICKED) {
+	else if (event_code == LV_EVENT_SHORT_CLICKED) {
 		Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
 
 		Periph->SetChanged(true);
@@ -616,7 +616,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
 		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) //komisch dass nicht Released
 		{
 			Periph->SetValue(0.0);
-			Serial.printf("Button %s-State is DISABLED - Schalte aus\\r", Periph->GetName());
+			Serial.printf("Button %s-State is DISABLED - Schalte aus\n\r", Periph->GetName());
 		}
 		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED)
 		{
@@ -654,6 +654,7 @@ void Ui_Switch_Loaded(lv_event_t * e)
 
 		CompThingArray[Pos] = new CompButton();
 		CompThingArray[Pos]->Setup(ui_ScrSwitch, 0, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
+		CompThingArray[Pos]->Update();
 	}
 
 	static uint32_t user_data = 10;

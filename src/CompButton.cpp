@@ -221,8 +221,10 @@ void CompButton::Update()
     lv_obj_set_pos(_Button,  _x, _y);
 
     //set Switch-state
-    if (_Periph->GetValue() == 1) lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
-    else 			  lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
+    if (_Periph->GetValue() == 0) 
+        lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
+    else 			  
+        lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
 
     // show Spinner if Value is in changed state
     if (_Periph->GetChanged()) ShowSpinner();

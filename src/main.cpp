@@ -471,7 +471,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         if (P)      // Peer bekannt
         { 
             P->SetTSLastSeen(millis());
-            if (Self.GetDebugMode()) Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
+            //if (Self.GetDebugMode()) Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
 
             // first time register periphs or periodically check if changed - save if needed
             if (Order == SEND_CMD_PAIR_ME) 
@@ -523,13 +523,14 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             }
             else // Peer known - no status-report, no pairing so read new values
             {
+                Serial.printf("%s: Peer known - reading values\n\r", P->GetName());
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
                 {
-                    float TempSensor = (float)doc[P->GetPeriphName(Si)];
-                    if (TempSensor)
+                    if (doc[P->GetPeriphName(Si)].is<JsonVariant>())
                     {
+                        float TempSensor = doc[P->GetPeriphName(Si)];
                         //if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
-                        //Serial.print(P->GetPeriphName(i)); Serial.print(" found = "); Serial.println(TempSensor);
+                        Serial.printf("vorher:  %s gemeldet: %.2f - intern: %.2f - changed: %s\n\r", P->GetPeriphName(Si), TempSensor, P->GetPeriphValue(Si), P->GetPeriphChanged(Si)?"true":"false");
                         
                         if (TempSensor != P->GetPeriphValue(Si)) {
                             P->SetPeriphOldValue(Si, P->GetPeriphValue(Si));
@@ -537,6 +538,8 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                             P->SetPeriphChanged(Si, true);
                         }
                         else P->SetPeriphChanged(Si, false);
+
+                        Serial.printf("nachher: %s gemeldet: %.2f - intern: %.2f - changed: %s\n\r", P->GetPeriphName(Si), TempSensor, P->GetPeriphValue(Si), P->GetPeriphChanged(Si)?"true":"false");
                     }
 
                     int Status = doc["Status"];
@@ -689,8 +692,8 @@ void SendPing(lv_timer_t * timer) {
     for (int i=0; i<PeerList.size(); i++)
     {
         P = PeerList.get(i);
-        PrintMAC(P->GetBroadcastAddress());
-        Serial.printf(" - Sende Stay Alive an: %s\n\r", P->GetName());
+        //PrintMAC(P->GetBroadcastAddress());
+        //Serial.printf(" - Sende Stay Alive an: %s\n\r", P->GetName());
         
         if (P->GetType() > 0) esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  
     }
@@ -874,7 +877,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
         
         if (status == ESP_NOW_SEND_SUCCESS)
         {
-            Serial.println("Message send SUCCESS");
+            //Serial.println("Message send SUCCESS");
         }
         else 
         {

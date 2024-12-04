@@ -129,6 +129,10 @@ void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, 
 		lv_imgbtn_set_src(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED, NULL, &ui_img_715952573, NULL);
     }
 
+    //set Switch-state
+    if (Periph->GetValue() == 0) lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
+    else                         lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
+    
     lv_obj_set_align(_Button, LV_ALIGN_CENTER);
     lv_obj_set_height(_Button, _Height);
     lv_obj_set_width (_Button, _Width);   /// 1

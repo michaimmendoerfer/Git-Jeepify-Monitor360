@@ -131,7 +131,6 @@ void Ui_Set_WebSvr(lv_event_t * e)
 {
 	ToggleWebServer();
 }
-
 void Ui_Set_Prepare(lv_event_t * e)
 {	
 	uint32_t user_data = 10;
@@ -226,7 +225,6 @@ void Ui_Peers_Prepare(lv_event_t * e)
 	
 	lv_roller_set_options(ui_RollerPeers1, Options.c_str(), LV_ROLLER_MODE_NORMAL);
 }
-
 void Ui_Peers_Selected(lv_event_t * e)
 {
 	char buf[100];

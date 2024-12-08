@@ -6,7 +6,7 @@
 #define NODE_TYPE MONITOR_ROUND
 //#define KILL_NVS 1
 
-const char *_Version = "V 3.71";
+const char *_Version = "V 3.81";
 const char *_Name = "Monitor 360";
 const char _Protokoll_Version[] = "1.20";
 
@@ -48,6 +48,7 @@ struct ConfirmStruct {
     int      Try;
     bool     Confirmed;
 };
+#define JEEPIFY_SEND_MAX_TRIES 10
 
 MyLinkedList<ConfirmStruct*> ConfirmList = MyLinkedList<ConfirmStruct*>();
 
@@ -466,10 +467,12 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             SaveNeeded = true;
             NewPeer    = true;
             Self.SetPairMode(false); TSPair = 0;
+            if (Self.GetDebugMode()) ShowMessageBox("Peer added...", doc["Node"], 2000, 150);
         }
 
         if (P)      // Peer bekannt
         { 
+            if ((Self.GetDebugMode()) and (millis() - P->GetTSLastSeen() > OFFLINE_INTERVAL)) ShowMessageBox("Peer online", P->GetName(), 1000, 200);
             P->SetTSLastSeen(millis());
             //if (Self.GetDebugMode()) Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
 
@@ -588,6 +591,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         {
             SavePeers();
             SaveNeeded = false;
+            if (Self.GetDebugMode()) ShowMessageBox("Saving...", "complete", 1000, 200);
         }
         if (NewPeer)
         {
@@ -644,7 +648,9 @@ void setup()
     static uint32_t user_data = 10;
     lv_timer_t * TimerPing = lv_timer_create(SendPing, PING_INTERVAL,  &user_data);
 
-    ui_init(); 
+    ui_init();
+    ShowMessageBox("TiTel", "BlahBlahBlah...", 4000); 
+    ShowMessageBox("Oben", "drüber", 2000, 100);
 }
 void loop() 
 {
@@ -659,7 +665,7 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, uint32_t T
     esp_err_t SendStatus = esp_now_send(P->GetBroadcastAddress(), data, len);
     
     Serial.printf("SendStatus was %d, ConfirmNeeded = %d\n\r", SendStatus, ConfirmNeeded);
-    if (0) //if (ConfirmNeeded)
+    if (1) //if (ConfirmNeeded)
     {   
         ConfirmStruct *Confirm = new ConfirmStruct;
         memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);
@@ -707,25 +713,29 @@ void SendPing(lv_timer_t * timer) {
             
             if (Confirm->Confirmed == true)
             {
-                Serial.printf("deleted Msg: %s from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->Try);
-                delete Confirm;
+                //Serial.printf("deleted Msg: %s from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->Try);
+                char TxtBuf[100];
+                sprintf(TxtBuf, "SUCCESS - Message to %s successful confirmed after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
+                ShowMessageBox("SUCCESS", TxtBuf, 1000, 200);
                 ConfirmList.remove(i);
+                delete Confirm;
             }
-            else if (Confirm->Try == 21)
+            else if (Confirm->Try == JEEPIFY_SEND_MAX_TRIES+1)
             {
-                Serial.printf("deleted Msg: %s from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->Try);
-                delete Confirm;
+                //Serial.printf("deleted Msg: %s from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->Try);
+                char TxtBuf[100];
+                sprintf(TxtBuf, "FAILED - Message to %s deleted after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
+                ShowMessageBox("FAILED", TxtBuf, 1000, 200);
                 ConfirmList.remove(i);
+                delete Confirm;
             }
             else
             {
                 Serial.printf("%d: reSending Msg: %s from ConfirmList Try: %d\n\r", millis(), Confirm->Message, Confirm->Try);
                 esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message, 200); 
-            }
-            
+            }     
         }
     }
-    
 }
 void SendPairingConfirm(PeerClass *P) {
   JsonDocument doc; String jsondata; 
@@ -800,6 +810,25 @@ void PrepareJSON() {
 }
 #pragma endregion System-Screens
 #pragma region Other
+void ShowMessageBox(const char * Titel, const char *Txt, int delay, int opa)
+{
+    static const char * btns[] = {""};
+
+    lv_obj_t *MsgBox = lv_msgbox_create(lv_scr_act(), Titel, Txt, NULL, false);
+    lv_obj_set_style_bg_color(MsgBox, lv_color_hex(0xAD0808), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(MsgBox, opa, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(MsgBox, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(MsgBox, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(MsgBox, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(MsgBox, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_color(MsgBox, lv_color_hex(0xDBDBDB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(MsgBox, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_text_font(lv_msgbox_get_title(MsgBox), &lv_font_montserrat_22, LV_PART_MAIN | LV_STATE_DEFAULT);
+    
+    lv_obj_center(MsgBox);
+    lv_obj_del_delayed(MsgBox, delay);
+}  
 bool ToggleSleepMode() 
 {
     preferences.begin("JeepifyInit", false);

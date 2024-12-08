@@ -171,6 +171,7 @@ void Ui_Set_SavePeers(lv_event_t * e)
 {
     SavePeers();
 	Self.SetChanged(false);
+	if (Self.GetDebugMode()) ShowMessageBox("Saving...", "complete", 1000, 200);
 }
 void SettingsUpdateTimer(lv_timer_t * timer)
 {

@@ -29,6 +29,8 @@ void   SendPairingConfirm(PeerClass *Peer);
 //void   MultiScreenAddPeriph(struct_Periph *Periph, uint8_t Pos);
 
 //void   CheckButtonVars();
+void   ShowMessageBox(const char * Titel, const char *Txt, int delay, int opa=255);
+
 bool   ToggleSleepMode();
 bool   ToggleDebugMode();
 bool   TogglePairMode();

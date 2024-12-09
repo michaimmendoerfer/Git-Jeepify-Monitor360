@@ -4,6 +4,8 @@
 
 #define NODE_NAME "Monitor 360"
 #define NODE_TYPE MONITOR_ROUND
+
+#define DEBUG if (Self.GetDebugMode())
 //#define KILL_NVS 1
 
 const char *_Version = "V 3.81";
@@ -30,12 +32,12 @@ const char _Protokoll_Version[] = "1.20";
 
 #pragma region Globals
 
-char *T[MAX_PERIPHERALS] = {"T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"};
-char *N[MAX_PERIPHERALS] = {"N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"};
-char *B[MAX_PERIPHERALS] = {"Br0", "Br1", "Br2", "Br3", "Br4", "B5r", "B6r", "B7r", "B8r"};
-char *ArrNullwert[MAX_PERIPHERALS] = {"NW0", "NW1", "NW2", "NW3", "NW4", "NW5", "NW6", "NW7", "NW8"};
-char *ArrVperAmp[MAX_PERIPHERALS] = {"VpA0", "VpA1", "VpA2", "VpA3", "VpA4", "VpA5", "VpA6", "VpA7", "VpA8"};
-char *ArrVin[MAX_PERIPHERALS] = {"Vin0", "Vin1", "Vin2", "Vin3", "Vin4", "Vin5", "Vin6", "Vin7", "Vin8"};
+const char *T[MAX_PERIPHERALS] = {"T0", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8"};
+const char *N[MAX_PERIPHERALS] = {"N0", "N1", "N2", "N3", "N4", "N5", "N6", "N7", "N8"};
+const char *B[MAX_PERIPHERALS] = {"Br0", "Br1", "Br2", "Br3", "Br4", "B5r", "B6r", "B7r", "B8r"};
+const char *ArrNullwert[MAX_PERIPHERALS] = {"NW0", "NW1", "NW2", "NW3", "NW4", "NW5", "NW6", "NW7", "NW8"};
+const char *ArrVperAmp[MAX_PERIPHERALS] = {"VpA0", "VpA1", "VpA2", "VpA3", "VpA4", "VpA5", "VpA6", "VpA7", "VpA8"};
+const char *ArrVin[MAX_PERIPHERALS] = {"Vin0", "Vin1", "Vin2", "Vin3", "Vin4", "Vin5", "Vin6", "Vin7", "Vin8"};
 
 int PeerCount;
 Preferences preferences;
@@ -171,7 +173,7 @@ bool SendWebPeriphNameChange()
     
     TSMsgSnd = millis();
     esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 
     return true;
 }
@@ -188,7 +190,7 @@ bool SendWebPeerNameChange()
     
     TSMsgSnd = millis();
     esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 
     return true;
 }
@@ -205,7 +207,7 @@ bool SendWebVinChange()
     
     TSMsgSnd = millis();
     esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 
     return true;
 }
@@ -222,7 +224,7 @@ bool SendWebVperAmpChange()
     
     TSMsgSnd = millis();
     esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 
     return true;
 }
@@ -239,7 +241,7 @@ bool SendWebNullwertChange()
     
     TSMsgSnd = millis();
     esp_now_send(ActiveWebPeer->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 
     return true;
 }
@@ -278,7 +280,7 @@ void InitWebServer()
                   WebBuffer = request->getParam("PeerName")->value();
                   if (WebBuffer != "")
                     { 
-                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewPeerName = %s\n\r", WebBuffer.c_str());  
+                        DEBUG Serial.printf("Received from web: NewPeerName = %s\n\r", WebBuffer.c_str());  
                         if (ActiveWebPeer) 
                         {   
                             SaveNeeded = true;
@@ -295,7 +297,7 @@ void InitWebServer()
                   WebBuffer = request->getParam("PeriphName")->value();
                   if (WebBuffer != "")
                     { 
-                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewPeriphName = %s\n\r", WebBuffer.c_str());  
+                        DEBUG Serial.printf("Received from web: NewPeriphName = %s\n\r", WebBuffer.c_str());  
                         if (ActiveWebPeriph) 
                         {
                             SaveNeeded = true;
@@ -312,7 +314,7 @@ void InitWebServer()
                   WebBuffer = request->getParam("Nullwert")->value();
                   if (WebBuffer != "")
                     { 
-                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewNullwert = %s\n\r", WebBuffer.c_str());  
+                        DEBUG Serial.printf("Received from web: NewNullwert = %s\n\r", WebBuffer.c_str());  
                         if (ActiveWebPeriph) 
                         {
                             SaveNeeded = true;
@@ -329,7 +331,7 @@ void InitWebServer()
                   WebBuffer = request->getParam("VperAmp")->value();
                   if (WebBuffer != "")
                     { 
-                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewVperAmp = %s\n\r", WebBuffer.c_str());  
+                        DEBUG Serial.printf("Received from web: NewVperAmp = %s\n\r", WebBuffer.c_str());  
                         if (ActiveWebPeriph) 
                         {
                             SaveNeeded = true;
@@ -346,7 +348,7 @@ void InitWebServer()
                   WebBuffer = request->getParam("Vin")->value();
                   if (WebBuffer != "")
                     { 
-                        if (Self.GetDebugMode()) Serial.printf("Received from web: NewVin = %s\n\r", WebBuffer.c_str());  
+                        DEBUG Serial.printf("Received from web: NewVin = %s\n\r", WebBuffer.c_str());  
                         if (ActiveWebPeriph) 
                         {
                             SaveNeeded = true;
@@ -359,14 +361,14 @@ void InitWebServer()
             
             if (message == "module") 
             {
-                if (Self.GetDebugMode()) Serial.println("Module aufgerufen");
+                DEBUG Serial.println("Module aufgerufen");
                 ActiveWebPeer   = &Self;
                 ActiveWebPeriph = NULL;
                 Serial.printf("aktueller Name = %s\n\r", ActiveWebPeer->GetName());
             }
             if (message == "prev") 
             {
-                if (Self.GetDebugMode()) Serial.println("Prev aufgerufen");
+                DEBUG Serial.println("Prev aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
                     PeerClass *TempP = FindFirstPeer(MODULE_ALL);
@@ -382,7 +384,7 @@ void InitWebServer()
             }
             if (message == "next") 
             {
-                if (Self.GetDebugMode()) Serial.println("Next aufgerufen");
+                DEBUG Serial.println("Next aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
                     PeerClass *TempP = FindFirstPeer(MODULE_ALL);
@@ -467,14 +469,14 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             SaveNeeded = true;
             NewPeer    = true;
             Self.SetPairMode(false); TSPair = 0;
-            if (Self.GetDebugMode()) ShowMessageBox("Peer added...", doc["Node"], 2000, 150);
+            DEBUG ShowMessageBox("Peer added...", doc["Node"], 2000, 150);
         }
 
         if (P)      // Peer bekannt
         { 
             if ((Self.GetDebugMode()) and (millis() - P->GetTSLastSeen() > OFFLINE_INTERVAL)) ShowMessageBox("Peer online", P->GetName(), 1000, 200);
             P->SetTSLastSeen(millis());
-            //if (Self.GetDebugMode()) Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
+            //DEBUG Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
 
             // first time register periphs or periodically check if changed - save if needed
             if (Order == SEND_CMD_PAIR_ME) 
@@ -493,12 +495,12 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 
                 // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
                 for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
-                    if (Self.GetDebugMode()) Serial.printf("Check Pairing for: %s\n\r", Buf);
+                    DEBUG Serial.printf("Check Pairing for: %s\n\r", Buf);
                     
                     int TempType = doc[T[Si]]; 
                     if (TempType)
                     {
-                        if (Self.GetDebugMode()) Serial.printf("Pairing found: %s\n\r", Buf);       
+                        DEBUG Serial.printf("Pairing found: %s\n\r", Buf);       
                         String PName = doc[N[Si]];
 
                         if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (TempType != P->GetPeriphType(Si)))
@@ -507,7 +509,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                                 P->SetPeriphChanged(Si, true);
                                 if (NewPeer) PeriphList.add(P->GetPeriphPtr(Si));
                                 SaveNeeded = true;
-                                if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
+                                DEBUG Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
                         }
                     } 
                     
@@ -517,7 +519,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                         if (P->GetPeriphBrotherPos(Si) != BrotherPos)              
                         {
                             P->SetPeriphBrotherPos(Si, BrotherPos);
-                            if (Self.GetDebugMode()) Serial.printf("%s->Periph[%d].BrotherPos is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), P->GetPeriphBrotherPtr(Si)->GetName());
+                            DEBUG Serial.printf("%s->Periph[%d].BrotherPos is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), P->GetPeriphBrotherPtr(Si)->GetName());
                         }
                      }
                 }
@@ -591,7 +593,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         {
             SavePeers();
             SaveNeeded = false;
-            if (Self.GetDebugMode()) ShowMessageBox("Saving...", "complete", 1000, 200);
+            DEBUG ShowMessageBox("Saving...", "complete", 1000, 200);
         }
         if (NewPeer)
         {
@@ -753,7 +755,7 @@ void SendPairingConfirm(PeerClass *P) {
   
   TSMsgSnd = millis();
   esp_now_send(broadcastAddressAll, (uint8_t *) jsondata.c_str(), 200); 
-  if (Self.GetDebugMode())
+  DEBUG
   {
       Serial.print("Sent you are paired"); 
       Serial.println(jsondata);  
@@ -778,7 +780,7 @@ bool ToggleSwitch(PeriphClass *Periph)
     
     TSMsgSnd = millis();
     esp_now_send(FindPeerById(Periph->GetPeerId())->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
     
     return true;
 }
@@ -793,7 +795,7 @@ void SendCommand(PeerClass *P, int Cmd, String Value) {
   
   TSMsgSnd = millis();
   esp_now_send(P->GetBroadcastAddress(), (uint8_t *) jsondata.c_str(), 100);  //Sending "jsondata"  
-  if (Self.GetDebugMode()) Serial.println(jsondata);
+  DEBUG Serial.println(jsondata);
 }
 #pragma endregion Send-Things
 #pragma region System-Screens
@@ -856,7 +858,7 @@ bool TogglePairMode() {
       TSPair = millis();
   };
 
-  if (Self.GetDebugMode()) { Serial.print("PairMode changed to: "); Serial.println(Self.GetPairMode()); }
+  DEBUG { Serial.print("PairMode changed to: "); Serial.println(Self.GetPairMode()); }
   
   return Self.GetPairMode();
 }
@@ -874,7 +876,7 @@ void CalibVolt() {
 
     JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, TSConfirm, true);  
     
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 }
 void CalibAmp() 
 {
@@ -889,7 +891,7 @@ void CalibAmp()
     serializeJson(doc, jsondata);  
     JeepifySend(ActivePeer, (uint8_t *) jsondata.c_str(), 100, TSConfirm, true);  
 
-    if (Self.GetDebugMode()) Serial.println(jsondata);
+    DEBUG Serial.println(jsondata);
 }
 
 void PrintMAC(const uint8_t * mac_addr){
@@ -899,7 +901,7 @@ void PrintMAC(const uint8_t * mac_addr){
   Serial.print(macStr);
 }
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) { 
-    if (Self.GetDebugMode()) 
+    DEBUG 
     {
         //Serial.print("Last Packet Send Status: ");
         //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");

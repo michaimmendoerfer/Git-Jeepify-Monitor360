@@ -651,8 +651,6 @@ void setup()
     lv_timer_t * TimerPing = lv_timer_create(SendPing, PING_INTERVAL,  &user_data);
 
     ui_init();
-    ShowMessageBox("TiTel", "BlahBlahBlah...", 4000); 
-    ShowMessageBox("Oben", "drüber", 2000, 100);
 }
 void loop() 
 {
@@ -667,7 +665,7 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, uint32_t T
     esp_err_t SendStatus = esp_now_send(P->GetBroadcastAddress(), data, len);
     
     Serial.printf("SendStatus was %d, ConfirmNeeded = %d\n\r", SendStatus, ConfirmNeeded);
-    if (1) //if (ConfirmNeeded)
+    if (ConfirmNeeded)
     {   
         ConfirmStruct *Confirm = new ConfirmStruct;
         memcpy(Confirm->Address, P->GetBroadcastAddress(), 6);
@@ -678,7 +676,7 @@ esp_err_t  JeepifySend(PeerClass *P, const uint8_t *data, size_t len, uint32_t T
 
         ConfirmList.add(Confirm);
 
-        Serial.printf("added Msg: %s to ConfirmList\n\r", Confirm->Message, Confirm->Try);   
+        DEBUG Serial.printf("added Msg: %s to ConfirmList\n\r", Confirm->Message, Confirm->Try);   
     }
     return SendStatus;
 }
@@ -717,8 +715,8 @@ void SendPing(lv_timer_t * timer) {
             {
                 //Serial.printf("deleted Msg: %s from ConfirmList: SUCCESS (tries: %d)\n\r", Confirm->Message, Confirm->Try);
                 char TxtBuf[100];
-                sprintf(TxtBuf, "SUCCESS - Message to %s successful confirmed after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
-                ShowMessageBox("SUCCESS", TxtBuf, 1000, 200);
+                DEBUG sprintf(TxtBuf, "SUCCESS - Message to %s successful confirmed after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
+                DEBUG ShowMessageBox("SUCCESS", TxtBuf, 1000, 200);
                 ConfirmList.remove(i);
                 delete Confirm;
             }
@@ -726,14 +724,14 @@ void SendPing(lv_timer_t * timer) {
             {
                 //Serial.printf("deleted Msg: %s from ConfirmList: FAILED (tries: %d)\n\r", Confirm->Message, Confirm->Try);
                 char TxtBuf[100];
-                sprintf(TxtBuf, "FAILED - Message to %s deleted after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
-                ShowMessageBox("FAILED", TxtBuf, 1000, 200);
+                DEBUG sprintf(TxtBuf, "FAILED - Message to %s deleted after %d tries!", FindPeerByMAC(Confirm->Address)->GetName(), Confirm->Try);
+                DEBUG ShowMessageBox("FAILED", TxtBuf, 1000, 200);
                 ConfirmList.remove(i);
                 delete Confirm;
             }
             else
             {
-                Serial.printf("%d: reSending Msg: %s from ConfirmList Try: %d\n\r", millis(), Confirm->Message, Confirm->Try);
+                DEBUG Serial.printf("%d: reSending Msg: %s from ConfirmList Try: %d\n\r", millis(), Confirm->Message, Confirm->Try);
                 esp_err_t SendStatus = esp_now_send(Confirm->Address, (uint8_t*) Confirm->Message, 200); 
             }     
         }

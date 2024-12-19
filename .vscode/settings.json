@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "images.h": "c",
-        "new": "cpp",
-        "functional": "cpp"
-    },
-    "cmake.sourceDirectory": "C:/Users/micha/Documents/PlatformIO/Projekte/Git-Jeepify-Monitor360/src/Ui"
-}

@@ -208,7 +208,7 @@ void Ui_Peers_Prepare(lv_event_t * e)
 
 		if (Options != "") Options += "\n";
 			
-		if (millis()- P->GetTSLastSeen() > OFFLINE_INTERVAL) Options += "off: <";
+		if ((P->GetTSLastSeen() == 0) or (millis()- P->GetTSLastSeen() > OFFLINE_INTERVAL)) Options += "off: <";
 		else Options += "on:  <"; 
 			
 		Options += P->GetName();

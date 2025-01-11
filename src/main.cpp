@@ -10,7 +10,7 @@
 
 const char *_Version = "V 3.81";
 const char *_Name = "Monitor 360";
-const char _Protokoll_Version[] = "1.20";
+const char _Protokoll_Version[] = "2.0";
 
 #pragma region Includes
 #include <Arduino.h>
@@ -38,6 +38,7 @@ const char *B[MAX_PERIPHERALS] = {"Br0", "Br1", "Br2", "Br3", "Br4", "B5r", "B6r
 const char *ArrNullwert[MAX_PERIPHERALS] = {"NW0", "NW1", "NW2", "NW3", "NW4", "NW5", "NW6", "NW7", "NW8"};
 const char *ArrVperAmp[MAX_PERIPHERALS] = {"VpA0", "VpA1", "VpA2", "VpA3", "VpA4", "VpA5", "VpA6", "VpA7", "VpA8"};
 const char *ArrVin[MAX_PERIPHERALS] = {"Vin0", "Vin1", "Vin2", "Vin3", "Vin4", "Vin5", "Vin6", "Vin7", "Vin8"};
+const char *ArrPeriph[MAX_PERIPHERALS]   = {"Per0", "Per1", "Per2", "Per3", "Per4", "Per5", "Per6", "Per6", "Per7"};
 
 int PeerCount;
 Preferences preferences;
@@ -448,7 +449,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
     String BufS; char Buf[50] = {};
     bool SaveNeeded = false;
     bool NewPeer    = false;
-    bool PeerCanConfirm = false;
+    char buf[100];
     
     jsondataBuf = jsondata;
     PrepareJSON();
@@ -457,136 +458,127 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
 
     if (!error) // erfolgreich JSON
     {
-        P = FindPeerByMAC(info->src_addr);
-        TSMsgRcv = millis();
-        int Order = (int)doc["Order"];
+        strcpy(buf, doc["Node"]);
 
-        // new Peer wants to pair and module too - create it
-        if ((!P) and (Order == SEND_CMD_PAIR_ME) and (Self.GetPairMode())) // neuen Peer registrieren
-        { 
-            P = new PeerClass();
-            PeerList.add(P);
-            SaveNeeded = true;
-            NewPeer    = true;
-            Self.SetPairMode(false); TSPair = 0;
-            DEBUG ShowMessageBox("Peer added...", doc["Node"], 2000, 150);
+        char       *_PeerName    = strtok(buf, ";");
+        uint32_t    _Uptime      = atoi(strtok(NULL, ";"));
+        int         _Status      = atoi(strtok(NULL, ";"));
+        int         _Type        = (int) (doc["Type"]);
+        const char *_PeerVersion = doc["Version"];
+        int         _Order       = (int)doc["Order"];   
+
+        P = FindPeerByMAC(info->src_addr);
+        if (P)
+        {
+            if ((P) and (Self.GetDebugMode()) and (millis() - P->GetTSLastSeen() > OFFLINE_INTERVAL)) ShowMessageBox("Peer online", P->GetName(), 1000, 200);
+            P->SetTSLastSeen(millis());
         }
 
-        if (P)      // Peer bekannt
-        { 
-            if ((Self.GetDebugMode()) and (millis() - P->GetTSLastSeen() > OFFLINE_INTERVAL)) ShowMessageBox("Peer online", P->GetName(), 1000, 200);
-            P->SetTSLastSeen(millis());
-            //DEBUG Serial.printf("%d: bekannter Node: %s - LastSeen at %d\n\r", millis(), P->GetName(), P->GetTSLastSeen());
+        TSMsgRcv = millis();
 
-            // first time register periphs or periodically check if changed - save if needed
-            if (Order == SEND_CMD_PAIR_ME) 
-            { 
-                int    Status       = doc["Status"];
-                String PeerName     = doc["Node"];
-                String PeerVersion  = doc["Version"];
-
-                if ((strcmp(PeerName.c_str(), P->GetName()) != 0) or (strcmp(PeerVersion.c_str(), P->GetVersion()) != 0))
+        switch (_Order)
+        {
+            case SEND_CMD_PAIR_ME:
+                // new Peer wants to pair and module too - create it
+                if ((!P) and Self.GetPairMode())
                 {
+                    P = new PeerClass();
+                    PeerList.add(P);
                     SaveNeeded = true;
-                    P->Setup(PeerName.c_str(), (int)doc["Type"], PeerVersion.c_str(), info->src_addr, 
-                        (bool) bitRead(Status, 1), (bool) bitRead(Status, 0), (bool) bitRead(Status, 2), (bool) bitRead(Status, 3));
-                    //P->SetConfirm(bitRead(Status, 4));
-                } 
-                
-                // Message-Bsp: "Node":"ESP32-1"; "T0":"1"; "N0":"Switch1"
-                for (int Si=0; Si<MAX_PERIPHERALS; Si++) {
-                    DEBUG Serial.printf("Check Pairing for: %s\n\r", Buf);
+                    NewPeer    = true;
+                    Self.SetPairMode(false); TSPair = 0;
                     
-                    int TempType = doc[T[Si]]; 
-                    if (TempType)
-                    {
-                        DEBUG Serial.printf("Pairing found: %s\n\r", Buf);       
-                        String PName = doc[N[Si]];
+                    P->Setup(_PeerName, _Type, _PeerVersion, info->src_addr, (bool) bitRead(_Status, 1), (bool) bitRead(_Status, 0), (bool) bitRead(_Status, 2), (bool) bitRead(_Status, 3));
+                    DEBUG ShowMessageBox("Peer added...", doc["Node"], 2000, 150);
+                    SendPairingConfirm(P); 
 
-                        if ((strcmp(PName.c_str(), P->GetPeriphName(Si)) != 0) or (TempType != P->GetPeriphType(Si)))
-                        {
-                                P->PeriphSetup(Si, PName.c_str(), TempType, false, false, 0, 0, 0, P->GetId());
-                                P->SetPeriphChanged(Si, true);
-                                if (NewPeer) PeriphList.add(P->GetPeriphPtr(Si));
-                                SaveNeeded = true;
-                                DEBUG Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
-                        }
-                    } 
-                    
-                    int BrotherPos = (int) doc[B[Si]];
-                    if (BrotherPos)
+                    for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
                     {
-                        if (P->GetPeriphBrotherPos(Si) != BrotherPos)              
-                        {
-                            P->SetPeriphBrotherPos(Si, BrotherPos);
-                            DEBUG Serial.printf("%s->Periph[%d].BrotherPos is now: %d (%s)\n\r", P->GetName(), Si, P->GetPeriphBrotherPos(Si), P->GetPeriphBrotherPtr(Si)->GetName());
-                        }
-                     }
-                }
-                
-                SendPairingConfirm(P); 
-            }
-            else // Peer known - no status-report, no pairing so read new values
-            {
-                Serial.printf("%s: Peer known - reading values\n\r", P->GetName());
-                for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
-                {
-                    if (doc[P->GetPeriphName(Si)].is<JsonVariant>())
-                    {
-                        float TempSensor = doc[P->GetPeriphName(Si)];
-                        //if (abs(TempSensor) < SCHWELLE) TempSensor = 0;
-                        Serial.printf("vorher:  %s gemeldet: %.2f - intern: %.2f - changed: %s\n\r", P->GetPeriphName(Si), TempSensor, P->GetPeriphValue(Si), P->GetPeriphChanged(Si)?"true":"false");
+                        DEBUG Serial.printf("Check Pairing for: %s\n\r", ArrPeriph[Si]);
                         
-                        if (TempSensor != P->GetPeriphValue(Si)) {
-                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si));
-                            P->SetPeriphValue(Si, TempSensor);
+                        if (doc[ArrPeriph[Si]].is<JsonVariant>())
+                        {
+                            strcpy(buf, doc[ArrPeriph[Si]]);
+                            int   _PeriphType = atoi(strtok(buf, ";"));
+                            char *_PeriphName = strtok(NULL, ";");
+                            P->PeriphSetup(Si, _PeriphName, _PeriphType, false, 0,0,0,0, 0, 0, 0, P->GetId());
                             P->SetPeriphChanged(Si, true);
+                            PeriphList.add(P->GetPeriphPtr(Si));
+                            SaveNeeded = true;
+                            DEBUG Serial.printf("%s->Periph[%d].Name is now: %s\n\r", P->GetName(), Si, P->GetPeriphName(Si));
                         }
-                        else P->SetPeriphChanged(Si, false);
-
-                        Serial.printf("nachher: %s gemeldet: %.2f - intern: %.2f - changed: %s\n\r", P->GetPeriphName(Si), TempSensor, P->GetPeriphValue(Si), P->GetPeriphChanged(Si)?"true":"false");
                     }
-
-                    int Status = doc["Status"];
-                    if (Status)
-                    {
-                        P->SetDebugMode ((bool) bitRead(Status, 0));
-                        P->SetSleepMode ((bool) bitRead(Status, 1));
-                        P->SetDemoMode  ((bool) bitRead(Status, 2));
-                        P->SetPairMode  ((bool) bitRead(Status, 3));
-                    } 
-
-                    float TempNullWert = doc[ArrNullwert[Si]];
-                    if (TempNullWert) 
-                    {
-                        P->SetPeriphNullwert(Si, TempNullWert);
-                        Serial.printf("%s[%d] gefunden. Wert ist: %.3f. %s->Nullwert = %.3f\n\r", ArrNullwert[Si], Si, TempNullWert, P->GetName(), P->GetPeriphNullwert(Si));
-                    }
-                    
-                    float TempVperAmp = doc[ArrVperAmp[Si]];
-                    if (TempVperAmp) P->SetPeriphVperAmp(Si, TempVperAmp);
-                    
-                    float TempVin = doc[ArrVin[Si]];
-                    if (TempVin) P->SetPeriphVin(Si, TempVin);
-                } 
-
-                uint32_t TempTS = (uint32_t) doc["TSConfirm"];
-                if (TempTS)
+                }
+                break;
+            case SEND_CMD_STATUS:
+                if (P)
                 {
-                    Serial.printf("Confirm (%d) empfangen von %s\n\r", TempTS, P->GetName());
+                    // check for module name change
+                    if (strcmp(_PeerName, P->GetName())) P->SetName(_PeerName);
+
+                    for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
+                    {
+                        DEBUG Serial.printf("Check values of: %s\n\r", ArrPeriph[Si]);
+                        
+                        if (doc[ArrPeriph[Si]].is<JsonVariant>())
+                        {
+                            strcpy(buf, doc[ArrPeriph[Si]]);
+                            int   _PeriphType = atoi(strtok(buf, ";"));
+                            char *_PeriphName = strtok(NULL, ";");
+                            float _Value0     = atof(strtok(NULL, ";"));
+                            float _Value1     = atof(strtok(NULL, ";"));
+                            float _Value2     = atof(strtok(NULL, ";"));
+                            float _Value3     = atof(strtok(NULL, ";"));
+
+
+                            // check for periph name change
+                            if (strcmp(_PeriphName, P->GetPeriphName(Si))) P->SetPeriphName(Si, _PeriphName);
+                            
+                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si, 0), 0);
+                            P->SetPeriphValue(Si, _Value0, 0);
+                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si, 1), 1);
+                            P->SetPeriphValue(Si, _Value1, 1);
+                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si, 2), 2);
+                            P->SetPeriphValue(Si, _Value2, 2);
+                            P->SetPeriphOldValue(Si, P->GetPeriphValue(Si, 3), 3);
+                            P->SetPeriphValue(Si, _Value3, 3);
+                            
+                            P->SetPeriphChanged(Si, true);
+
+                            if (_Status)
+                            {
+                                P->SetDebugMode ((bool) bitRead(_Status, 0));
+                                P->SetSleepMode ((bool) bitRead(_Status, 1));
+                                P->SetDemoMode  ((bool) bitRead(_Status, 2));
+                                P->SetPairMode  ((bool) bitRead(_Status, 3));
+                            } 
+                            
+                            DEBUG Serial.printf("%s->%s values are: %.2f - %.2f - %.2f - %.2f\n\r", P->GetName(), P->GetPeriphName(Si), 
+                                P->GetPeriphValue(Si, 0), P->GetPeriphValue(Si, 1), P->GetPeriphValue(Si, 2), P->GetPeriphValue(Si, 3));
+                        }
+                    }
+                }
+                break;
+    
+            case SEND_CMD_CONFIRM:
+                if ((P) and (doc["TSConfirm"].is<JsonVariant>()))
+                {
+                    uint32_t _TSConfirm = doc[TSConfirm];
+                    
+                    DEBUG Serial.printf("Confirm (%d) empfangen von %s\n\r", _TSConfirm, P->GetName());
                     for (int i=0; i<ConfirmList.size(); i++)
                     {
                         ConfirmStruct *TempConfirm;
                         TempConfirm = ConfirmList.get(i);
-                    Serial.printf("empfangener TS ist: %d - durchsuchter TS (List[%d]) ist: %d\n\r", TempTS, i, TempConfirm->TSMessage);
-                    if (TempConfirm->TSMessage == TempTS)
+                        DEBUG Serial.printf("empfangener TS ist: %d - durchsuchter TS (List[%d]) ist: %d\n\r", _TSConfirm, i, TempConfirm->TSMessage);
+                        if (TempConfirm->TSMessage == _TSConfirm)
                         {
                             TempConfirm->Confirmed = true;
-                            Serial.printf("Found at list[%d] - DELETED\n\r", i);
+                            DEBUG Serial.printf("Found at list[%d] - DELETED\n\r", i);
                         }
                     }
                 }
-            }
+                break;
         } 
         
         if (SaveNeeded)
@@ -594,12 +586,6 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
             SavePeers();
             SaveNeeded = false;
             DEBUG ShowMessageBox("Saving...", "complete", 1000, 200);
-        }
-        if (NewPeer)
-        {
-            //ReportAll();
-            RegisterPeers();
-            NewPeer = false;
         }
     }
     else // Error bei JSON
@@ -767,10 +753,10 @@ bool ToggleSwitch(PeriphClass *Periph)
 {
     JsonDocument doc; String jsondata; 
     
-    doc["from"]  = Self.GetName();  
-    doc["Order"] = SEND_CMD_SWITCH_TOGGLE;
-    doc["Value"] = Periph->GetName();
-    doc["Pos"]   = Periph->GetPos();
+    doc["From"]         = Self.GetName();  
+    doc["Order"]        = SEND_CMD_SWITCH_TOGGLE;
+    doc["PeriphName"]   = Periph->GetName();
+    doc["PeriphPos"]    = Periph->GetPos();
 
     //Serial.printf("Toggle Value = %f\n\r", Periph->GetValue());
     

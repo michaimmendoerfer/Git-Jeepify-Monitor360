@@ -247,15 +247,15 @@ void CompButton::Update()
 
 	// fill Buf_Value if switch is on
 	sprintf(Buf_Periph, "%.6s", _Periph->GetName());
-	if ((_ValueVisible) and (_Periph->GetBrotherPos() > -1) and (_Periph->GetValue() == 1))
+	if ((_ValueVisible) and (_Periph->IsCombo()) and (_Periph->GetValue(0) == 1))
 	{
 		if (_PeriphValueCombo) 
         {
-            sprintf(Buf_Value, " %0.2fA", GetBrotherValueOf(_Periph));
+            sprintf(Buf_Value, " %0.2fA", _Periph->GetValue(3)); // amp-wert
         }
         else    
         {
-            sprintf(Buf_Value, "%0.2fA", GetBrotherValueOf(_Periph));
+            sprintf(Buf_Value, " %0.2fA", _Periph->GetValue(3)); // amp-wert
             lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
         }
 	}
@@ -286,7 +286,7 @@ void CompButton::Update()
     }
 
     // show value only if visible, not in periph, switch is on and brother is existent
-    if ((_ValueVisible) and (_Periph->GetBrotherPos() > -1) and (!_PeriphValueCombo) and (_Periph->GetValue() == 1))
+    if ((_ValueVisible) and (_Periph->IsCombo()) and (!_PeriphValueCombo) and (_Periph->GetValue() == 1))
     {
         lv_label_set_text(_LblValue, Buf_Value);
         lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);

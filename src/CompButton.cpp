@@ -221,7 +221,7 @@ void CompButton::Update()
     lv_obj_set_pos(_Button,  _x, _y);
 
     //set Switch-state
-    if (_Periph->GetValue() == 0) 
+    if (_Periph->GetValue(0) == 0) 
         lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_RELEASED);
     else 			  
         lv_imgbtn_set_state(_Button, LV_IMGBTN_STATE_CHECKED_RELEASED);
@@ -276,8 +276,8 @@ void CompButton::Update()
     {
         if (_Size == 1)
         {
-            if (_Periph->GetValue() == 1) SetPeriphPos(0,  lv_pct(33));
-            else                          SetPeriphPos(0,  lv_pct(-33));
+            if (_Periph->GetValue(0) == 1) SetPeriphPos(0,  lv_pct(33));
+            else                           SetPeriphPos(0,  lv_pct(-33));
         }
 
         lv_label_set_text(_LblPeriph, Buf_Periph);
@@ -286,7 +286,7 @@ void CompButton::Update()
     }
 
     // show value only if visible, not in periph, switch is on and brother is existent
-    if ((_ValueVisible) and (_Periph->IsCombo()) and (!_PeriphValueCombo) and (_Periph->GetValue() == 1))
+    if ((_ValueVisible) and (_Periph->IsCombo()) and (!_PeriphValueCombo) and (_Periph->GetValue(0) == 1))
     {
         lv_label_set_text(_LblValue, Buf_Value);
         lv_obj_clear_flag(_LblValue, LV_OBJ_FLAG_HIDDEN);
@@ -437,18 +437,19 @@ void CompSensor::Update()
     {
         char buf[10];
         int nk = 0;
-        float value = _Periph->GetValue();
         lv_color_t bg;
-        
-        if      (value<10)  nk = 2;
-        else if (value<100) nk = 1;
-        else                nk = 0;
-
-        if (value == -99) strcpy(buf, "--"); 
-        else dtostrf(value, 0, nk, buf);
+        float value;
 
         if (_Periph->GetType() == SENS_TYPE_AMP)
         {
+            value = _Periph->GetValue(3);
+        
+            if      (value<10)  nk = 2;
+            else if (value<100) nk = 1;
+            else                nk = 0;
+
+            if (value == -99) strcpy(buf, "--"); 
+            else dtostrf(value, 0, nk, buf);
             strcat(buf, " A");
             
             if      (value < 20) bg = lv_color_hex(0x135A25);
@@ -461,6 +462,14 @@ void CompSensor::Update()
         }
         else if (_Periph->GetType() == SENS_TYPE_VOLT)
         {
+            float value = _Periph->GetValue(2);
+        
+            if      (value<10)  nk = 2;
+            else if (value<100) nk = 1;
+            else                nk = 0;
+
+            if (value == -99) strcpy(buf, "--"); 
+            else dtostrf(value, 0, nk, buf);
             strcat(buf, " V");
                         
             if 	(value < 13)   	bg = lv_color_hex(0x135A25);

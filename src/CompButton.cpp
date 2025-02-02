@@ -20,8 +20,7 @@ CompThing::CompThing()
 CompThing::~CompThing()
 {
 	if (_Button)  { lv_obj_del(_Button); _Button = NULL; }
-    Serial.println("CompThing-Destructor - Button weg");
-	
+    	
 }
 void CompThing::Update()
 { 
@@ -62,9 +61,6 @@ CompButton::~CompButton()
     lv_obj_invalidate(_LblValue);
 	
     if (_Spinner) { lv_obj_del(_Spinner); _Spinner = NULL; }
-    #ifdef DEBUG 
-	Serial.println("CompButton Destructor - Spinner weg");
-    #endif
 }
 void CompButton::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
@@ -304,7 +300,6 @@ CompSensor::CompSensor()
 CompSensor::~CompSensor()
 {
     lv_obj_remove_event_cb(_Button, _event_cb);
-    Serial.println("CompSensor Destructor");
 }
 void CompSensor::Setup(lv_obj_t * comp_parent, int x, int y, int Pos, int size, PeriphClass *Periph, lv_event_cb_t event_cb)
 {
@@ -501,7 +496,6 @@ CompMeter::CompMeter()
 CompMeter::~CompMeter() 
 {
 	lv_obj_remove_event_cb(_Button, _event_cb);
-    Serial.println("CompMeter Destructor");
 }
 static void Meter_cb(lv_event_t * e) {
 
@@ -623,9 +617,7 @@ void CompMeter::Update()
     lv_obj_set_pos(_LblPeriph, _X_Periph, _Y_Periph);
     lv_obj_set_pos(_LblValue,  _X_Value,  _Y_Value);
 
-	//Serial.printf("Peer:Periph %s:%s", PeerOf(_Periph)->GetName(), _Periph->GetName());
-
-	if ((PeerOf(_Periph)->GetName() == NULL) or (!_PeerVisible))
+    if ((PeerOf(_Periph)->GetName() == NULL) or (!_PeerVisible))
 	{
 	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
@@ -650,18 +642,17 @@ void CompMeter::Update()
 	int nk = 0;
 	float value = _Periph->GetValue();
 	    
-		//if (DebugMode) Serial.printf("Sensor: %s: %f\n", ActiveSens->Name, value);
-		if (abs(value) < SCHWELLE) value = 0;
+    if (abs(value) < SCHWELLE) value = 0;
 
-		if      (value<10)  nk = 2;
-		else if (value<100) nk = 1;
-		else                nk = 0;
+    if      (value<10)  nk = 2;
+    else if (value<100) nk = 1;
+    else                nk = 0;
 
-		if (value == -99) strcpy(buf, "--"); 
-		else dtostrf(value, 0, nk, buf);
+    if (value == -99) strcpy(buf, "--"); 
+    else dtostrf(value, 0, nk, buf);
 
-		if (_Periph->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
-		if (_Periph->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
+    if (_Periph->GetType() == SENS_TYPE_AMP)  strcat(buf, " A");
+    if (_Periph->GetType() == SENS_TYPE_VOLT) strcat(buf, " V");
 		
 	lv_meter_set_indicator_value(_Button, _IndicNeedle, value*10);
 

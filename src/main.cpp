@@ -372,13 +372,13 @@ void InitWebServer()
                 DEBUG Serial.println("Prev aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
-                    PeerClass *TempP = FindFirstPeer(MODULE_ALL, 1);
+                    PeerClass *TempP = FindNextPeer(NULL, MODULE_ALL, CIRCULAR, ONLINE);
                     if (TempP) ActiveWebPeer = TempP;
-                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL, 1);  
+                    ActiveWebPeriph = FindNextPeriph(ActiveWebPeer, NULL, SENS_TYPE_ALL, ONLINE);  
                 }
                 else
                 {
-                    ActiveWebPeriph = FindPrevPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true, 1);
+                    ActiveWebPeriph = FindPrevPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, CIRCULAR, ONLINE);
                     ActiveWebPeer   = FindPeerById(ActiveWebPeriph->GetPeerId());
                 }
 
@@ -388,9 +388,9 @@ void InitWebServer()
                 DEBUG Serial.println("Next aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
-                    PeerClass *TempP = FindFirstPeer(MODULE_ALL, 1);
+                    PeerClass *TempP = FindNextPeer(NULL, MODULE_ALL, 1);
                     if (TempP) ActiveWebPeer = TempP;
-                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL, 1);  
+                    ActiveWebPeriph = FindNextPeriph(ActiveWebPeer, NULL, SENS_TYPE_ALL, 1);  
                 }
                 else
                 {
@@ -467,7 +467,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         const char *_PeerVersion = doc["Version"];
         int         _Order       = (int)doc["Order"];   
         int         _TSConfirm   = (int)doc["TSConfirm"];
-        //P = FindPeerByMAC(info->src_addr);
+        
         P = FindPeerByMAC(info->src_addr);
         if (P)
         {
@@ -502,8 +502,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                             strcpy(buf, doc[ArrPeriph[Si]]);
                             int   _PeriphType = atoi(strtok(buf, ";"));
                             char *_PeriphName = strtok(NULL, ";");
-                            P->PeriphSetup(Si, _PeriphName, _PeriphType, -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, P->GetId()); 
-                         //P->PeriphSetup(Si, _PeriphName, _PeriphType, false, 0,0,0,0, 0, 0, 0, P->GetId());
+                            P->PeriphSetup(Si, _PeriphName, _PeriphType, P->GetId()); 
                             P->SetPeriphChanged(Si, true);
                             PeriphList.add(P->GetPeriphPtr(Si));
                             SaveNeeded = true;
@@ -517,7 +516,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 {
                     // check for module name change
                     if (strcmp(_PeerName, P->GetName())) P->SetName(_PeerName);
-                    Serial.printf("----------------------------------------------------------------------%d dBm (%s)\n\r", info->rx_ctrl->rssi, P->GetName());
+                    //Serial.printf("----------------------------------------------------------------------%d dBm (%s)\n\r", info->rx_ctrl->rssi, P->GetName());
                     for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
                     {
                         //DEBUG ("Check values of: %s\n\r", ArrPeriph[Si]);

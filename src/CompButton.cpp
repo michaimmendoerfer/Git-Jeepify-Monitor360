@@ -493,6 +493,7 @@ CompMeter::CompMeter()
     _ValueVisible = true;
     _SystemVisible = false;
     _PeriphValueCombo = false;
+    _dBmVisible = true;
 }
 CompMeter::~CompMeter() 
 {
@@ -617,14 +618,14 @@ void CompMeter::Update()
     lv_obj_set_pos(_LblPeer,   _X_Peer,   _Y_Peer);
     lv_obj_set_pos(_LblPeriph, _X_Periph, _Y_Periph);
     lv_obj_set_pos(_LblValue,  _X_Value,  _Y_Value);
-
+    //nur so
     if ((PeerOf(_Periph)->GetName() == NULL) or (!_PeerVisible))
 	{
 	    lv_obj_add_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
 	else
 	{
-	    	lv_label_set_text_fmt(_LblPeer, "%.6s", PeerOf(_Periph)->GetName());
+	    	lv_label_set_text_fmt(_LblPeer, "%.6s (%d dBm)", PeerOf(_Periph)->GetName(), PeerOf(_Periph)->GetdBm());
      		lv_obj_clear_flag(_LblPeer, LV_OBJ_FLAG_HIDDEN);
 	}
     

@@ -250,7 +250,7 @@ bool SendWebNullwertChange()
 void InitWebServer()
 {
     Serial.printf("create AP = %d", WiFi.softAP(ssid, password));
-    //WiFi.setTxPower(WIFI_POWER_8_5dBm);
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);
     int txPower = WiFi.getTxPower();
     Serial.print("TX power: ");
     Serial.println(txPower);
@@ -372,13 +372,13 @@ void InitWebServer()
                 DEBUG Serial.println("Prev aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
-                    PeerClass *TempP = FindFirstPeer(MODULE_ALL);
+                    PeerClass *TempP = FindFirstPeer(MODULE_ALL, 1);
                     if (TempP) ActiveWebPeer = TempP;
-                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL);  
+                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL, 1);  
                 }
                 else
                 {
-                    ActiveWebPeriph = FindPrevPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true);
+                    ActiveWebPeriph = FindPrevPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true, 1);
                     ActiveWebPeer   = FindPeerById(ActiveWebPeriph->GetPeerId());
                 }
 
@@ -388,13 +388,13 @@ void InitWebServer()
                 DEBUG Serial.println("Next aufgerufen");
                 if (ActiveWebPeer == &Self) 
                 {
-                    PeerClass *TempP = FindFirstPeer(MODULE_ALL);
+                    PeerClass *TempP = FindFirstPeer(MODULE_ALL, 1);
                     if (TempP) ActiveWebPeer = TempP;
-                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL);  
+                    ActiveWebPeriph = FindFirstPeriph(ActiveWebPeer, SENS_TYPE_ALL, 1);  
                 }
                 else
                 {
-                    ActiveWebPeriph = FindNextPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true);
+                    ActiveWebPeriph = FindNextPeriph(NULL, ActiveWebPeriph, SENS_TYPE_ALL, true, 1);
                     ActiveWebPeer   = FindPeerById(ActiveWebPeriph->GetPeerId());
                 }
             }
@@ -517,7 +517,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
                 {
                     // check for module name change
                     if (strcmp(_PeerName, P->GetName())) P->SetName(_PeerName);
-
+                    Serial.printf("----------------------------------------------------------------------%d dBm (%s)\n\r", info->rx_ctrl->rssi, P->GetName());
                     for (int Si=0; Si<MAX_PERIPHERALS; Si++) 
                     {
                         //DEBUG ("Check values of: %s\n\r", ArrPeriph[Si]);
@@ -619,8 +619,8 @@ void setup()
     if (esp_now_init() != ESP_OK) { Serial.println("Error initializing ESP-NOW"); return; }
 
     esp_now_register_send_cb(OnDataSent);
-    esp_now_register_recv_cb(OnDataRecv);    
-
+    esp_now_register_recv_cb(OnDataRecv);   
+    
     //Get saved Peers  
     preferences.begin("JeepifyInit", true);
         Self.SetDebugMode(preferences.getBool("DebugMode", true));

@@ -11,7 +11,6 @@ extern "C" {
 #endif
 
 void Ui_Init_Custom(lv_event_t * e);
-void Ui_Menu_Loaded(lv_event_t * e);
 void Ui_Menu_Btn1_Clicked(lv_event_t * e);
 void Ui_Menu_Btn2_Clicked(lv_event_t * e);
 void Ui_Set_Prepare(lv_event_t * e);

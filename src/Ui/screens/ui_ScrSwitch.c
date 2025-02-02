@@ -12,6 +12,34 @@ void ui_ScrSwitch_screen_init(void)
     lv_obj_set_style_bg_opa(ui_ScrSwitch, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_img_src(ui_ScrSwitch, &ui_img_jeepifybackground_png, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_BtnSwitchNext = lv_btn_create(ui_ScrSwitch);
+    lv_obj_set_width(ui_BtnSwitchNext, lv_pct(15));
+    lv_obj_set_height(ui_BtnSwitchNext, lv_pct(40));
+    lv_obj_set_y(ui_BtnSwitchNext, 0);
+    lv_obj_set_x(ui_BtnSwitchNext, lv_pct(35));
+    lv_obj_set_align(ui_BtnSwitchNext, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_color(ui_BtnSwitchNext, lv_color_hex(0xB31A1A), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BtnSwitchNext, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_BtnSwitchNext, lv_color_hex(0x560707), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_BtnSwitchNext, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_BtnSwitchNext, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_BtnSwitchNext, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_BtnSwitchPrev = lv_btn_create(ui_ScrSwitch);
+    lv_obj_set_width(ui_BtnSwitchPrev, lv_pct(15));
+    lv_obj_set_height(ui_BtnSwitchPrev, lv_pct(40));
+    lv_obj_set_x(ui_BtnSwitchPrev, lv_pct(-35));
+    lv_obj_set_y(ui_BtnSwitchPrev, lv_pct(0));
+    lv_obj_set_align(ui_BtnSwitchPrev, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_color(ui_BtnSwitchPrev, lv_color_hex(0xB31A1A), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_BtnSwitchPrev, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_BtnSwitchPrev, lv_color_hex(0x560707), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_BtnSwitchPrev, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_color(ui_BtnSwitchPrev, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_shadow_opa(ui_BtnSwitchPrev, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_add_event_cb(ui_BtnSwitchNext, ui_event_BtnSwitchNext, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_BtnSwitchPrev, ui_event_BtnSwitchPrev, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_ScrSwitch, ui_event_ScrSwitch, LV_EVENT_ALL, NULL);
 
 }

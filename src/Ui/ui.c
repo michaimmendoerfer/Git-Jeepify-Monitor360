@@ -11,7 +11,6 @@
 
 // SCREEN: ui_ScrMenu
 void ui_ScrMenu_screen_init(void);
-void ui_event_ScrMenu(lv_event_t * e);
 lv_obj_t * ui_ScrMenu;
 lv_obj_t * ui_ImgRubicon;
 lv_obj_t * ui_LblMenuVersion;
@@ -188,6 +187,10 @@ lv_obj_t * ui_Label4;
 void ui_ScrSwitch_screen_init(void);
 void ui_event_ScrSwitch(lv_event_t * e);
 lv_obj_t * ui_ScrSwitch;
+void ui_event_BtnSwitchNext(lv_event_t * e);
+lv_obj_t * ui_BtnSwitchNext;
+void ui_event_BtnSwitchPrev(lv_event_t * e);
+lv_obj_t * ui_BtnSwitchPrev;
 // CUSTOM VARIABLES
 
 // EVENTS
@@ -214,15 +217,6 @@ const lv_img_dsc_t * ui_imgset_1265058017[1] = {&ui_img_1769637049};
 ///////////////////// ANIMATIONS ////////////////////
 
 ///////////////////// FUNCTIONS ////////////////////
-void ui_event_ScrMenu(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-
-    if(event_code == LV_EVENT_SCREEN_LOADED) {
-        Ui_Menu_Loaded(e);
-    }
-}
-
 void ui_event_BtnMenu1(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -672,6 +666,24 @@ void ui_event_ScrSwitch(lv_event_t * e)
     }
     if(event_code == LV_EVENT_SCREEN_UNLOADED) {
         Ui_Switch_Leave(e);
+    }
+}
+
+void ui_event_BtnSwitchNext(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        Ui_Switch_Next(e);
+    }
+}
+
+void ui_event_BtnSwitchPrev(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if(event_code == LV_EVENT_CLICKED) {
+        Ui_Switch_Prev(e);
     }
 }
 

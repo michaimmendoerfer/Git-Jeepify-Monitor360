@@ -585,7 +585,7 @@ void SwitchUpdateTimer(lv_timer_t * timer)
 }
 void Ui_Switch_Next(lv_event_t * e)
 {
-	PeriphClass *TestPeriph = FindNextPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SWITCH, true);
+	PeriphClass *TestPeriph = FindNextPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SW_ALL, true, 1);
 
 	if (TestPeriph)
 	{
@@ -632,7 +632,7 @@ void Ui_Switch_Clicked(lv_event_t * e)
 }
 void Ui_Switch_Prev(lv_event_t * e)
 {
-	PeriphClass *TestPeriph = FindPrevPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SWITCH, true);
+	PeriphClass *TestPeriph = FindPrevPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SW_ALL, true, 1);
 	
 	if (TestPeriph)
 	{
@@ -647,7 +647,7 @@ void Ui_Switch_Loaded(lv_event_t * e)
 	if (!ActivePeriphSwitch) 
 	{
 		Serial.println("No ActivePeriphSwitch");
-		ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SWITCH, true);
+		ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SW_ALL, true);
 	}	
 	if (ActivePeriphSwitch)
 	{
@@ -738,8 +738,18 @@ void Ui_Periph_Choice_Loaded(lv_event_t * e)
 
 		switch (ActivePeriph->GetType()) {
 			case SENS_TYPE_SWITCH:	lv_label_set_text(ui_LblPeriphChoiceType, "Switch"); 
-									lv_img_set_src(ui_ImgPeerChoice, &ui_img_menubtn2_png);
+									lv_img_set_src(ui_ImgPeerChoice, &ui_img_888658411);
 									break;
+			case SENS_TYPE_SW_AMP:	lv_label_set_text(ui_LblPeriphChoiceType, "sensed Switch"); 
+									lv_img_set_src(ui_ImgPeerChoice, &ui_img_888658411);
+									break;
+			case SENS_TYPE_LT:	    lv_label_set_text(ui_LblPeriphChoiceType, "Switch"); 
+									lv_img_set_src(ui_ImgPeerChoice, &ui_img_888658411);
+									break;
+			case SENS_TYPE_LT_AMP:	lv_label_set_text(ui_LblPeriphChoiceType, "sensed Switch"); 
+									lv_img_set_src(ui_ImgPeerChoice, &ui_img_888658411);
+									break;
+			
 			case SENS_TYPE_AMP:		lv_label_set_text(ui_LblPeriphChoiceType, "Amp-Sensor"); 
 									lv_img_set_src(ui_ImgPeerChoice, &ui_img_menubtn1_png);
 									break;
@@ -867,7 +877,7 @@ void Ui_Menu_Btn1_Clicked(lv_event_t * e)
 
 void Ui_Menu_Btn2_Clicked(lv_event_t * e)
 {
-	if (!ActivePeriphSwitch) ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SWITCH, true);
+	if (!ActivePeriphSwitch) ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SW_ALL, true, 2);
 	if (ActivePeriphSwitch) _ui_screen_change(&ui_ScrSwitch, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSwitch_screen_init);
 }
 #pragma endregion Menu

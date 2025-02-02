@@ -21,6 +21,7 @@ void ui_ScrMenu_screen_init(void)
     lv_obj_add_flag(ui_ImgRubicon, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_ImgRubicon, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_zoom(ui_ImgRubicon, 400);
+    lv_obj_set_style_transform_zoom(ui_ImgRubicon, 256, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_LblMenuVersion = lv_label_create(ui_ScrMenu);
     lv_obj_set_width(ui_LblMenuVersion, LV_SIZE_CONTENT);   /// 1
@@ -138,6 +139,5 @@ void ui_ScrMenu_screen_init(void)
     lv_obj_add_event_cb(ui_BtnMenu2, ui_event_BtnMenu2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnMenu3, ui_event_BtnMenu3, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_BtnMenu4, ui_event_BtnMenu4, LV_EVENT_ALL, NULL);
-    lv_obj_add_event_cb(ui_ScrMenu, ui_event_ScrMenu, LV_EVENT_ALL, NULL);
 
 }

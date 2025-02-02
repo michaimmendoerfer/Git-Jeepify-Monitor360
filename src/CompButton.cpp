@@ -16,6 +16,7 @@ CompThing::CompThing()
     _ValueVisible     = false;
     _SystemVisible    = false;
     _PeriphValueCombo = true;
+    _dBmVisible       = false;
 }
 CompThing::~CompThing()
 {

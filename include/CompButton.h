@@ -37,6 +37,7 @@ class CompThing {
         bool _PeriphVisible;
         bool _ValueVisible;
         bool _SystemVisible;
+        bool _dBmVisible;
         bool _PeriphValueCombo;
 
         int _X_Peer;

@@ -473,6 +473,7 @@ void OnDataRecv(const esp_now_recv_info *info, const uint8_t* incomingData, int 
         {
             if ((P) and (Self.GetDebugMode()) and (millis() - P->GetTSLastSeen() > OFFLINE_INTERVAL)) ShowMessageBox("Peer online", P->GetName(), 1000, 200);
             P->SetTSLastSeen(millis());
+            P->SetdBm(info->rx_ctrl->rssi);
         }
 
         TSMsgRcv = millis();

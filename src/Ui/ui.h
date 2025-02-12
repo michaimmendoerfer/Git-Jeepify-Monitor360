@@ -96,12 +96,6 @@ extern lv_obj_t * ui_TxtJSON1;
 extern lv_obj_t * ui_LblJSON2;
 // CUSTOM VARIABLES
 
-// SCREEN: ui_ScrSingle
-void ui_ScrSingle_screen_init(void);
-void ui_event_ScrSingle(lv_event_t * e);
-extern lv_obj_t * ui_ScrSingle;
-// CUSTOM VARIABLES
-
 // SCREEN: ui_ScrPeer
 void ui_ScrPeer_screen_init(void);
 void ui_event_ScrPeer(lv_event_t * e);
@@ -192,16 +186,6 @@ extern lv_obj_t * ui_Label3;
 void ui_event_ButtonMulti4(lv_event_t * e);
 extern lv_obj_t * ui_ButtonMulti4;
 extern lv_obj_t * ui_Label4;
-// CUSTOM VARIABLES
-
-// SCREEN: ui_ScrSwitch
-void ui_ScrSwitch_screen_init(void);
-void ui_event_ScrSwitch(lv_event_t * e);
-extern lv_obj_t * ui_ScrSwitch;
-void ui_event_BtnSwitchNext(lv_event_t * e);
-extern lv_obj_t * ui_BtnSwitchNext;
-void ui_event_BtnSwitchPrev(lv_event_t * e);
-extern lv_obj_t * ui_BtnSwitchPrev;
 // CUSTOM VARIABLES
 
 // EVENTS

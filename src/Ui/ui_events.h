@@ -24,10 +24,6 @@ void Ui_Set_SavePeers(lv_event_t * e);
 void Ui_Peers_Prepare(lv_event_t * e);
 void Ui_Peers_Selected(lv_event_t * e);
 void Ui_JSON_Prepare(lv_event_t * e);
-void Ui_Single_Next(lv_event_t * e);
-void Ui_Single_Last(lv_event_t * e);
-void Ui_Single_Prepare(lv_event_t * e);
-void Ui_Single_Leave(lv_event_t * e);
 void Ui_Peer_Loaded(lv_event_t * e);
 void Ui_Peer_Next(lv_event_t * e);
 void Ui_Peer_Last(lv_event_t * e);
@@ -51,10 +47,6 @@ void Ui_Multi_Set_Panel1(lv_event_t * e);
 void Ui_Multi_Set_Panel2(lv_event_t * e);
 void Ui_Multi_Set_Panel3(lv_event_t * e);
 void Ui_Multi_Set_Panel4(lv_event_t * e);
-void Ui_Switch_Next(lv_event_t * e);
-void Ui_Switch_Prev(lv_event_t * e);
-void Ui_Switch_Loaded(lv_event_t * e);
-void Ui_Switch_Leave(lv_event_t * e);
 
 #ifdef __cplusplus
 } /*extern "C"*/

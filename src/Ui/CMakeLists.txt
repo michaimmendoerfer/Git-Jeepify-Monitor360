@@ -4,13 +4,11 @@ SET(SOURCES components/ui_comp_buttonsensorsmall.c
     screens/ui_ScrSettings.c
     screens/ui_ScrPeers.c
     screens/ui_ScrJSON.c
-    screens/ui_ScrSingle.c
     screens/ui_ScrPeer.c
     screens/ui_ScrEichen.c
     screens/ui_ScrVolt.c
     screens/ui_ScrPeriph.c
     screens/ui_ScrMulti.c
-    screens/ui_ScrSwitch.c
     ui_theme_manager.cpp
     ui_themes.cpp
     ui.c

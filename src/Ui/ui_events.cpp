@@ -27,7 +27,6 @@ lv_obj_t *Ui_LedSnd;
 lv_obj_t *Ui_LedRcv;
 lv_obj_t *Ui_LedPair;
 
-lv_timer_t *SingleTimer;
 lv_timer_t *MultiTimer;
 lv_timer_t *SwitchTimer;
 lv_timer_t *SettingsTimer;
@@ -47,12 +46,12 @@ LV_IMG_DECLARE(ui_img_btn_png);
 
 void Keyboard_cb(lv_event_t * event);
 
-void SingleUpdateTimer(lv_timer_t * timer);
+//void SingleUpdateTimer(lv_timer_t * timer);
 void MultiUpdateTimer(lv_timer_t * timer);
-void SwitchUpdateTimer(lv_timer_t * timer);
+//void SwitchUpdateTimer(lv_timer_t * timer);
 void SettingsUpdateTimer(lv_timer_t * timer);
 
-void Ui_Single_Clicked(lv_event_t * e);
+//void Ui_Single_Clicked(lv_event_t * e);
 void Ui_Multi_Clicked(lv_event_t * e);
 
 #pragma endregion Global_Definitions
@@ -250,6 +249,7 @@ void Ui_JSON_Prepare(lv_event_t * e)
 	PrepareJSON();
 }
 #pragma endregion Screen_JSON
+/* kann weg
 #pragma region Screen_SingleMeter
 void Ui_Single_Next(lv_event_t * e)
 {	
@@ -353,6 +353,7 @@ static void SingleMeter_cb(lv_event_t * e) {
 }
 
 #pragma endregion Screen_SingleMeter
+*/
 #pragma region Screen_MultiMeter
 void Ui_Multi_Loaded(lv_event_t * e)
 {
@@ -523,6 +524,7 @@ void Ui_Multi_Prev(lv_event_t * e)
 	Ui_Multi_Loaded(e);
 }
 #pragma endregion Screen_MultiMeter
+/* kann weg
 #pragma region Screen_Switch
 void SwitchUpdateTimer(lv_timer_t * timer)
 {
@@ -616,6 +618,7 @@ void Ui_Switch_Leave(lv_event_t * e)
 	}
 }
 #pragma endregion Screen_Switch
+*/
 #pragma region Screen_PeriphChoice
 void Ui_PeriphChoice_Next(lv_event_t * e)
 {
@@ -779,12 +782,12 @@ void Ui_Menu_Loaded(lv_event_t * e)
 void Ui_Menu_Btn1_Clicked(lv_event_t * e)
 {
 	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
-	if (ActivePeriphSingle) _ui_screen_change(&ui_ScrMeter, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrMeter_screen_init);
+	if (ActivePeriphSingle) _ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
 }
 
 void Ui_Menu_Btn2_Clicked(lv_event_t * e)
 {
 	if (!ActivePeriphSwitch) ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SW_ALL, CIRCULAR, ONLINE);
-	if (ActivePeriphSwitch) _ui_screen_change(&ui_ScrSwitch, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSwitch_screen_init);
+	if (ActivePeriphSwitch) _ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
 }
 #pragma endregion Menu

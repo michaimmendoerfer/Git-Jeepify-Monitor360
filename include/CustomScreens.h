@@ -5,18 +5,18 @@
 #include "Ui/ui.h"
 #include "CompButton.h"
 
-// SCREEN: ui_ScrMeterVolt
-void ui_ScrMeter_screen_init(void);
-void ui_event_ui_ScrMeter(lv_event_t * e);
-void Ui_Meter_Next(lv_event_t * e);
-void Ui_Meter_Prev(lv_event_t * e);
-void Ui_Meter_Prepare(lv_event_t * e);
-void Ui_Meter_Leave(lv_event_t * e);
-void MeterUpdateTimer(lv_timer_t * timer);
-void Ui_Meter_Clicked(lv_event_t * e);
-void ui_event_ui_ScrMeter(lv_event_t * e);
+// SCREEN: ui_ScrSingle
+void ui_ScrSingle_screen_init(void);
+void ui_event_ui_ScrSingle(lv_event_t * e);
+void Ui_Single_Next(lv_event_t * e);
+void Ui_Single_Prev(lv_event_t * e);
+void Ui_Single_Prepare(lv_event_t * e);
+void Ui_Single_Leave(lv_event_t * e);
+void SingleUpdateTimer(lv_timer_t * timer);
+void Ui_Single_Clicked(lv_event_t * e);
+void ui_event_ui_ScrSingle(lv_event_t * e);
 
-extern lv_obj_t *ui_ScrMeter;
+extern lv_obj_t *ui_ScrSingle;
 
 extern PeriphClass *ActivePeriphSingle;
 extern PeriphClass *ActivePeriphSwitch;

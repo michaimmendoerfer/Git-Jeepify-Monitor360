@@ -9,100 +9,113 @@
 #include "main.h"
 #include "CompButton.h"
 
-lv_timer_t *MeterTimer;
-lv_obj_t *ui_ScrMeter;
+lv_timer_t *SingleTimer;
+lv_obj_t *ui_ScrSingle;
 
-void ui_ScrMeter_screen_init(void)
+void ui_ScrSingle_screen_init(void)
 {
-    ui_ScrMeter = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_ScrMeter, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_ScrMeter, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_ScrMeter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_img_src(ui_ScrMeter, &ui_img_jeepifybackground_png, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_img_opa(ui_ScrMeter, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ScrSingle = lv_obj_create(NULL);
+    lv_obj_clear_flag(ui_ScrSingle, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_ScrSingle, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_ScrSingle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_img_src(ui_ScrSingle, &ui_img_jeepifybackground_png, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_img_opa(ui_ScrSingle, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_ScrMeter, ui_event_ui_ScrMeter, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_ScrSingle, ui_event_ui_ScrSingle, LV_EVENT_ALL, NULL);
 
 }
-void Ui_Meter_Next(lv_event_t * e)
+void Ui_Single_Next(lv_event_t * e)
 {	
 	ActivePeriphSingle = FindNextPeriph(NULL, ActivePeriphSingle, ActivePeriphSingle->GetType(), CIRCULAR);
 	
 	if (ActivePeriphSingle)
 	{
-		Ui_Meter_Leave(e);
-		Ui_Meter_Prepare(e);
+		Ui_Single_Leave(e);
+		Ui_Single_Prepare(e);
 	}
 }
-void Ui_Meter_Prev(lv_event_t * e)
+void Ui_Single_Prev(lv_event_t * e)
 {
 	ActivePeriphSingle = FindPrevPeriph(NULL, ActivePeriphSingle, ActivePeriphSingle->GetType(), CIRCULAR);
 	
 	if (ActivePeriphSingle)
 	{
-		Ui_Meter_Leave(e);
-		Ui_Meter_Prepare(e);
+		Ui_Single_Leave(e);
+		Ui_Single_Prepare(e);
 	}
 }
-void Ui_Meter_Prepare(lv_event_t * e)
+void Ui_Single_Prepare(lv_event_t * e)
 {
 	int Pos = 0;
-	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
-	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_AMP, ONLINE);
-		
 	if (ActivePeriphSingle)
 	{
-		Serial.printf("ActivePeriphSinge = %s\n\r", ActivePeriphSingle->GetName());
 		if (CompThingArray[Pos]) 
 			{
 				delete CompThingArray[Pos];
 				CompThingArray[Pos] = NULL;
 			}
 
-		CompThingArray[Pos] = new CompMeter;
-		CompThingArray[Pos]->Setup(ui_ScrMeter, 0, 0, 0, 360, ActivePeriphSingle, Ui_Meter_Clicked);
+		if      (ActivePeriphSingle->IsSensor()) CompThingArray[Pos] = new CompMeter;
+		else if (ActivePeriphSingle->IsSwitch()) CompThingArray[Pos] = new CompButton;
+		
+		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
 		CompThingArray[Pos]->Update();
 		
 		static uint32_t user_data = 10;
 		
-		if (MeterTimer) 
+		if (SingleTimer) 
 		{
-			lv_timer_resume(MeterTimer);
+			lv_timer_resume(SingleTimer);
 		}
 		else 
 		{
-			MeterTimer = lv_timer_create(MeterUpdateTimer, 500,  &user_data);
+			SingleTimer = lv_timer_create(SingleUpdateTimer, 500,  &user_data);
 		}
 	}
 }
 
-void MeterUpdateTimer(lv_timer_t * timer)
+void SingleUpdateTimer(lv_timer_t * timer)
 {
 	if (CompThingArray[0]) CompThingArray[0]->Update();
 }
-void Ui_Meter_Clicked(lv_event_t * e)
+void Ui_Single_Clicked(lv_event_t * e)
 {
 	lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
+	PeriphClass *Periph;
 
     if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
         lv_indev_wait_release(lv_indev_get_act());
-        Ui_Meter_Next(e);
+        Ui_Single_Next(e);
     }
     else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
         lv_indev_wait_release(lv_indev_get_act());
-        Ui_Meter_Prev(e);
+        Ui_Single_Prev(e);
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
-		Ui_Meter_Next(e);
+		if (ActivePeriphSingle->IsSwitch())
+		{
+			Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
+
+			Periph->SetChanged(true);
+			
+			if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) 		  Periph->SetValue(0.0);
+			if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED) Periph->SetValue(1.0);
+			
+			ToggleSwitch(Periph);
+		}
+		else 
+		{
+			if (ActivePeriphSingle->IsSensor()) Ui_Single_Next(e);
+		}
 	}
 	else if (event_code == LV_EVENT_LONG_PRESSED) {
     }
 }
-void Ui_Meter_Leave(lv_event_t * e)
+void Ui_Single_Leave(lv_event_t * e)
 {
-	lv_timer_del(MeterTimer);
-	MeterTimer = NULL;
+	lv_timer_del(SingleTimer);
+	SingleTimer = NULL;
 
 	int Pos = 0;
 
@@ -113,7 +126,7 @@ void Ui_Meter_Leave(lv_event_t * e)
 	}
 }
 
-void ui_event_ui_ScrMeter(lv_event_t * e)
+void ui_event_ui_ScrSingle(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
 
@@ -123,16 +136,16 @@ void ui_event_ui_ScrMeter(lv_event_t * e)
     }
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
         lv_indev_wait_release(lv_indev_get_act());
-        Ui_Meter_Next(e);
+        Ui_Single_Next(e);
     }
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
         lv_indev_wait_release(lv_indev_get_act());
-        Ui_Meter_Prev(e);
+        Ui_Single_Prev(e);
     }
     if(event_code == LV_EVENT_SCREEN_LOAD_START) {
-        Ui_Meter_Prepare(e);
+        Ui_Single_Prepare(e);
     }
     if(event_code == LV_EVENT_SCREEN_UNLOAD_START) {
-        Ui_Meter_Leave(e);
+        Ui_Single_Leave(e);
     }
 }

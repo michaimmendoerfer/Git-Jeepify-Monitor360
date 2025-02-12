@@ -642,7 +642,9 @@ void CompMeter::Update()
 
     char buf[10];
 	int nk = 0;
-	float value = _Periph->GetValue();
+	float value;
+    if (_Periph->GetType() == SENS_TYPE_AMP)  value = _Periph->GetValue(3);
+	if (_Periph->GetType() == SENS_TYPE_VOLT) value = _Periph->GetValue(2);
 	    
     if (abs(value) < SCHWELLE) value = 0;
 

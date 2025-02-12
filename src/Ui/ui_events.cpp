@@ -15,6 +15,7 @@
 #include "ui_events.h"
 #include "main.h"
 #include "CompButton.h"
+#include "CustomScreens.h"
 
 #pragma region Global_Definitions
 uint8_t MultiPosToChange;
@@ -778,7 +779,7 @@ void Ui_Menu_Loaded(lv_event_t * e)
 void Ui_Menu_Btn1_Clicked(lv_event_t * e)
 {
 	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
-	if (ActivePeriphSingle) _ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
+	if (ActivePeriphSingle) _ui_screen_change(&ui_ScrMeter, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrMeter_screen_init);
 }
 
 void Ui_Menu_Btn2_Clicked(lv_event_t * e)

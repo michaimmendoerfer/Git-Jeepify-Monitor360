@@ -1,6 +1,9 @@
-#include <Arduino.h>
 
+#pragma region Includes
+#include <Arduino.h>
 #include "scr_st77916.h"
+#include "main.h"
+#pragma endregion Includes
 
 #define NODE_NAME "Monitor 360"
 #define NODE_TYPE MONITOR_ROUND
@@ -8,27 +11,9 @@
 #define DEBUG if (Self.GetDebugMode())
 //#define KILL_NVS 1
 
-const char *_Version = "V 3.81";
+const char *_Version = "V 3.90";
 const char *_Name = "Monitor 360";
 const char _Protokoll_Version[] = "2.0";
-
-#pragma region Includes
-#include <Arduino.h>
-#include "Jeepify.h"
-#include "main.h"
-#include <esp_now.h>
-#include <WiFi.h>
-#include <ArduinoJson.h>
-#include "pref_manager.h"
-#include "PeerClass.h"
-#include "LinkedList.h"
-#include <lvgl.h>
-#include "Ui\ui.h"
-#include "Ui\ui_events.h" 
-#include <nvs_flash.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#pragma endregion Includes
 
 #pragma region Globals
 

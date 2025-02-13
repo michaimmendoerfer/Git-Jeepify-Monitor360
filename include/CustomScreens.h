@@ -18,8 +18,9 @@ void ui_event_ui_ScrSingle(lv_event_t * e);
 
 extern lv_obj_t *ui_ScrSingle;
 
-extern PeriphClass *ActivePeriphSingle;
+extern PeriphClass *ActivePeriphSensor;
 extern PeriphClass *ActivePeriphSwitch;
+extern PeriphClass *ActivePeriphShown;
 extern CompThing   *CompThingArray[4];
 
 #endif

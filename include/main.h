@@ -1,15 +1,21 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <Arduino.h>
+#include "Jeepify.h"
 #include <esp_now.h>
 #include <WiFi.h>
-#include <lvgl.h>
+#include <ArduinoJson.h>
+#include "pref_manager.h"
 #include "PeerClass.h"
 #include "LinkedList.h"
+#include <lvgl.h>
+#include "Ui\ui.h"
+#include "Ui\ui_events.h" 
+#include <nvs_flash.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <Preferences.h>
-
-#define SCREEN_X 360
-#define SCREEN_Y 360
 
 void   PrintMAC(const uint8_t * mac_addr);
 
@@ -39,7 +45,6 @@ void   CalibVolt();
 void   CalibAmp();
 void   PrepareJSON();
 void   PrintMAC(const uint8_t * mac_addr);
-void   WriteStringToCharArray(String S, char *C);
 
 void   InitWebServer();
 

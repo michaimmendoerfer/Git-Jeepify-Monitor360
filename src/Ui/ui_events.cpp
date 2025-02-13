@@ -4,24 +4,23 @@
 // Project name: Jeepify
 
 #include <Arduino.h>
+#include "main.h"
 #include <String.h>
-#include <nvs_flash.h>
-#include "ui.h"
 #include "lv_meter.h"
 #include "PeerClass.h"
 #include "pref_manager.h"
 #include "LinkedList.h"
 #include "Jeepify.h"
 #include "ui_events.h"
-#include "main.h"
 #include "CompButton.h"
 #include "CustomScreens.h"
 
 #pragma region Global_Definitions
 uint8_t MultiPosToChange;
 
-PeriphClass *ActivePeriphSingle;
+PeriphClass *ActivePeriphSensor;
 PeriphClass *ActivePeriphSwitch;
+PeriphClass *ActivePeriphShown;
 
 lv_obj_t *Ui_LedSnd;
 lv_obj_t *Ui_LedRcv;
@@ -249,111 +248,6 @@ void Ui_JSON_Prepare(lv_event_t * e)
 	PrepareJSON();
 }
 #pragma endregion Screen_JSON
-/* kann weg
-#pragma region Screen_SingleMeter
-void Ui_Single_Next(lv_event_t * e)
-{	
-	ActivePeriphSingle = FindNextPeriph(NULL, ActivePeriphSingle, SENS_TYPE_SENS, CIRCULAR);
-	
-	if (ActivePeriphSingle)
-	{
-		Ui_Single_Leave(e);
-		Ui_Single_Prepare(e);
-	}
-}
-
-void Ui_Single_Last(lv_event_t * e)
-{
-	ActivePeriphSingle = FindPrevPeriph(NULL, ActivePeriphSingle, SENS_TYPE_SENS, CIRCULAR);
-	
-	if (ActivePeriphSingle)
-	{
-		Ui_Single_Leave(e);
-		Ui_Single_Prepare(e);
-	}
-}
-
-void Ui_Single_Prepare(lv_event_t * e)
-{
-	int Pos = 0;
-	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
-		
-	if (ActivePeriphSingle)
-	{
-		if (CompThingArray[Pos]) 
-			{
-				delete CompThingArray[Pos];
-				CompThingArray[Pos] = NULL;
-			}
-
-		CompThingArray[Pos] = new CompMeter;
-		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
-		CompThingArray[Pos]->Update();
-		
-		static uint32_t user_data = 10;
-		
-		if (SingleTimer) 
-		{
-			lv_timer_resume(SingleTimer);
-		}
-		else 
-		{
-			SingleTimer = lv_timer_create(SingleUpdateTimer, 500,  &user_data);
-		}
-	}
-}
-
-void SingleUpdateTimer(lv_timer_t * timer)
-{
-	if (CompThingArray[0]) CompThingArray[0]->Update();
-}
-void Ui_Single_Clicked(lv_event_t * e)
-{
-	lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-
-    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Single_Next(e);
-    }
-    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Single_Last(e);
-	}
-	else if (event_code == LV_EVENT_CLICKED) {
-		Ui_Single_Next(e);
-	}
-	else if (event_code == LV_EVENT_LONG_PRESSED) {
-    }
-}
-void Ui_Single_Leave(lv_event_t * e)
-{
-	lv_timer_del(SingleTimer);
-	SingleTimer = NULL;
-
-	int Pos = 0;
-
-	if (CompThingArray[Pos]) 
-	{
-		delete CompThingArray[Pos];
-		CompThingArray[Pos] = NULL;
-	}
-}
-
-static void SingleMeter_cb(lv_event_t * e) {
-
-	lv_obj_draw_part_dsc_t	*dsc  = (lv_obj_draw_part_dsc_t *)lv_event_get_param(e);
-	double					value;
-
-	if( dsc->text != NULL ) {		
-		value = dsc->value / 10;
-		snprintf(dsc->text, sizeof(dsc->text), "%5.1f", value);
-	}
-
-}
-
-#pragma endregion Screen_SingleMeter
-*/
 #pragma region Screen_MultiMeter
 void Ui_Multi_Loaded(lv_event_t * e)
 {
@@ -444,7 +338,8 @@ void Ui_Multi_Clicked(lv_event_t * e)
 		}
 		else if (Periph->IsSensor())
 		{
-			ActivePeriphSingle = Periph;
+			ActivePeriphSensor = Periph;
+			ActivePeriphShown  = ActivePeriphSensor;
 			ActivePeer   = PeerOf(Periph);
 			_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_ScrSingle_screen_init);
 		}
@@ -524,101 +419,6 @@ void Ui_Multi_Prev(lv_event_t * e)
 	Ui_Multi_Loaded(e);
 }
 #pragma endregion Screen_MultiMeter
-/* kann weg
-#pragma region Screen_Switch
-void SwitchUpdateTimer(lv_timer_t * timer)
-{
-	CompThingArray[0]->Update();
-}
-void Ui_Switch_Next(lv_event_t * e)
-{
-	PeriphClass *TestPeriph = FindNextPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SW_ALL, CIRCULAR, ONLINE);
-
-	if (TestPeriph)
-	{
-		ActivePeriphSwitch = TestPeriph;
-		Ui_Switch_Leave(e);
-		Ui_Switch_Loaded(e);
-	}
-}
-void Ui_Switch_Clicked(lv_event_t * e)
-{	
-	lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-	PeriphClass *Periph;
-
-    if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_LEFT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Switch_Next(e);
-    }
-    else if (event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_RIGHT) {
-        lv_indev_wait_release(lv_indev_get_act());
-        Ui_Switch_Prev(e);
-	}
-	else if (event_code == LV_EVENT_SHORT_CLICKED) 
-	{
-		Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
-
-		Periph->SetChanged(true);
-		
-		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_DISABLED) 		  Periph->SetValue(0.0);
-		if (lv_obj_get_state(target) == LV_IMGBTN_STATE_CHECKED_RELEASED) Periph->SetValue(1.0);
-		
-		ToggleSwitch(Periph);
-	}	
-}
-void Ui_Switch_Prev(lv_event_t * e)
-{
-	PeriphClass *TestPeriph = FindPrevPeriph(NULL, ActivePeriphSwitch, SENS_TYPE_SW_ALL, CIRCULAR, ONLINE);
-	
-	if (TestPeriph)
-	{
-		ActivePeriphSwitch = TestPeriph;
-		Ui_Switch_Leave(e);
-		Ui_Switch_Loaded(e);
-	}
-}
-void Ui_Switch_Loaded(lv_event_t * e)
-{
-	int Pos = 0;
-	if (!ActivePeriphSwitch) ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SW_ALL, CIRCULAR, ONLINE);
-	
-	if (ActivePeriphSwitch)
-	{
-		if (CompThingArray[Pos]) delete CompThingArray[Pos];
-
-		CompThingArray[Pos] = new CompButton();
-		CompThingArray[Pos]->Setup(ui_ScrSwitch, 0, 0, 0, 2, ActivePeriphSwitch, Ui_Switch_Clicked);
-		CompThingArray[Pos]->Update();
-	}
-
-	static uint32_t user_data = 10;
-	if (!SwitchTimer) { 
-		SwitchTimer = lv_timer_create(SwitchUpdateTimer, 500,  &user_data);
-	}
-	else {
-		lv_timer_resume(SwitchTimer);
-	}
-}
-void Ui_Switch_Leave(lv_event_t * e)
-{
-	int Pos = 0;
-	
-	if (SwitchTimer) 
-	{
-		lv_timer_del(SwitchTimer);
-		SwitchTimer = NULL;
-	}
-	
-	if (CompThingArray[Pos]) 
-	{
-		lv_obj_invalidate(CompThingArray[Pos]->GetButton());
-		delete CompThingArray[Pos];
-		CompThingArray[Pos] = NULL;
-	}
-}
-#pragma endregion Screen_Switch
-*/
 #pragma region Screen_PeriphChoice
 void Ui_PeriphChoice_Next(lv_event_t * e)
 {
@@ -781,13 +581,21 @@ void Ui_Menu_Loaded(lv_event_t * e)
 
 void Ui_Menu_Btn1_Clicked(lv_event_t * e)
 {
-	if (!ActivePeriphSingle) ActivePeriphSingle = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
-	if (ActivePeriphSingle) _ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
+	if (!ActivePeriphSensor) ActivePeriphSensor = FindNextPeriph(NULL, NULL, SENS_TYPE_SENS, ONLINE);
+	if (ActivePeriphSensor) 
+	{	
+		ActivePeriphShown = ActivePeriphSensor;
+		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
+	}
 }
 
 void Ui_Menu_Btn2_Clicked(lv_event_t * e)
 {
 	if (!ActivePeriphSwitch) ActivePeriphSwitch = FindNextPeriph(NULL, NULL, SENS_TYPE_SW_ALL, CIRCULAR, ONLINE);
-	if (ActivePeriphSwitch) _ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
+	if (ActivePeriphSwitch) 
+	{
+		ActivePeriphShown = ActivePeriphSwitch;
+		_ui_screen_change(&ui_ScrSingle, LV_SCR_LOAD_ANIM_FADE_ON, 50, 0, &ui_ScrSingle_screen_init);
+	}
 }
 #pragma endregion Menu

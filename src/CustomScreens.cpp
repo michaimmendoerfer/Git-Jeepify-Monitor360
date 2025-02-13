@@ -26,9 +26,19 @@ void ui_ScrSingle_screen_init(void)
 }
 void Ui_Single_Next(lv_event_t * e)
 {	
-	ActivePeriphSingle = FindNextPeriph(NULL, ActivePeriphSingle, ActivePeriphSingle->GetType(), CIRCULAR);
+	if (ActivePeriphShown->IsType(SENS_TYPE_SENS))   
+	{
+		ActivePeriphSensor = FindNextPeriph(NULL, ActivePeriphShown, SENS_TYPE_SENS, CIRCULAR);
+		ActivePeriphShown  = ActivePeriphSensor;
+	}
 	
-	if (ActivePeriphSingle)
+	if (ActivePeriphShown->IsType(SENS_TYPE_SW_ALL)) 
+	{
+		ActivePeriphSwitch = FindNextPeriph(NULL, ActivePeriphShown, SENS_TYPE_SW_ALL, CIRCULAR);
+		ActivePeriphShown  = ActivePeriphSwitch;
+	}
+
+	if (ActivePeriphShown)
 	{
 		Ui_Single_Leave(e);
 		Ui_Single_Prepare(e);
@@ -36,9 +46,19 @@ void Ui_Single_Next(lv_event_t * e)
 }
 void Ui_Single_Prev(lv_event_t * e)
 {
-	ActivePeriphSingle = FindPrevPeriph(NULL, ActivePeriphSingle, ActivePeriphSingle->GetType(), CIRCULAR);
+	if (ActivePeriphShown->IsType(SENS_TYPE_SENS))   
+	{
+		ActivePeriphSensor = FindPrevPeriph(NULL, ActivePeriphShown, SENS_TYPE_SENS, CIRCULAR);
+		ActivePeriphShown  = ActivePeriphSensor;
+	}
 	
-	if (ActivePeriphSingle)
+	if (ActivePeriphShown->IsType(SENS_TYPE_SW_ALL)) 
+	{
+		ActivePeriphSwitch = FindPrevPeriph(NULL, ActivePeriphShown, SENS_TYPE_SW_ALL, CIRCULAR);
+		ActivePeriphShown  = ActivePeriphSwitch;
+	}
+	
+	if (ActivePeriphShown)
 	{
 		Ui_Single_Leave(e);
 		Ui_Single_Prepare(e);
@@ -47,7 +67,7 @@ void Ui_Single_Prev(lv_event_t * e)
 void Ui_Single_Prepare(lv_event_t * e)
 {
 	int Pos = 0;
-	if (ActivePeriphSingle)
+	if (ActivePeriphShown)
 	{
 		if (CompThingArray[Pos]) 
 			{
@@ -55,10 +75,10 @@ void Ui_Single_Prepare(lv_event_t * e)
 				CompThingArray[Pos] = NULL;
 			}
 
-		if      (ActivePeriphSingle->IsSensor()) CompThingArray[Pos] = new CompMeter;
-		else if (ActivePeriphSingle->IsSwitch()) CompThingArray[Pos] = new CompButton;
+		if      (ActivePeriphShown->IsSensor()) CompThingArray[Pos] = new CompMeter;
+		else if (ActivePeriphShown->IsSwitch()) CompThingArray[Pos] = new CompButton;
 		
-		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphSingle, Ui_Single_Clicked);
+		CompThingArray[Pos]->Setup(ui_ScrSingle, 0, 0, 0, 360, ActivePeriphShown, Ui_Single_Clicked);
 		CompThingArray[Pos]->Update();
 		
 		static uint32_t user_data = 10;
@@ -93,7 +113,7 @@ void Ui_Single_Clicked(lv_event_t * e)
         Ui_Single_Prev(e);
 	}
 	else if (event_code == LV_EVENT_CLICKED) {
-		if (ActivePeriphSingle->IsSwitch())
+		if (ActivePeriphShown->IsSwitch())
 		{
 			Periph = FindPeriphById(atoi(lv_label_get_text(lv_obj_get_child(target, 3))));
 
@@ -106,7 +126,7 @@ void Ui_Single_Clicked(lv_event_t * e)
 		}
 		else 
 		{
-			if (ActivePeriphSingle->IsSensor()) Ui_Single_Next(e);
+			if (ActivePeriphShown->IsSensor()) Ui_Single_Next(e);
 		}
 	}
 	else if (event_code == LV_EVENT_LONG_PRESSED) {

@@ -93,7 +93,6 @@ void Ui_Single_Prepare(lv_event_t * e)
 		}
 	}
 }
-
 void SingleUpdateTimer(lv_timer_t * timer)
 {
 	if (CompThingArray[0]) CompThingArray[0]->Update();
@@ -145,7 +144,6 @@ void Ui_Single_Leave(lv_event_t * e)
 		CompThingArray[Pos] = NULL;
 	}
 }
-
 void ui_event_ui_ScrSingle(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -169,3 +167,4 @@ void ui_event_ui_ScrSingle(lv_event_t * e)
         Ui_Single_Leave(e);
     }
 }
+
